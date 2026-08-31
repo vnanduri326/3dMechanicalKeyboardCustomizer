@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Node
+node_modules/
+dist/
+
+# Assets
+frontend/public/models/*.glb
+assets-source/downloaded/
+
+# IDE / OS
+.vscode/
+.DS_Store
