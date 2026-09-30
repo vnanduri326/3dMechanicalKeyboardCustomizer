@@ -7,7 +7,7 @@ load_dotenv()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://keyboard_user:keyboard_pass@localhost:5432/keyboards",
+    "postgresql+psycopg://keyboard_user:keyboard_pass@localhost:5432/keyboards",
 )
 
 engine = create_engine(DATABASE_URL)
