@@ -21,3 +21,25 @@ class RawPage(Base):
         kwargs.setdefault("fetched_at", datetime.utcnow())
         kwargs.setdefault("processed", False)
         super().__init__(**kwargs)
+
+class ColorVariant(Base):
+    __tablename__ = "color_variants"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    color_name = Column(String, nullable=False)
+    color_hex = Column(String, nullable=True)
+    plate_material = Column(String, nullable=True)
+    price = Column(String, nullable=False)
+    sku = Column(String, nullable=False)
+    in_stock = Column(Boolean, default=True)
+
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    canonical_name = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    brand = Column(String, nullable=False)
+    product_type_raw = Column(String, nullable=False)
+    color_variants = Column(JSONB, default=list)
+    tags = Column(JSONB, default=list)
