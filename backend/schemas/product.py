@@ -86,7 +86,10 @@ def detect_product_type(raw_type: str, tags: list[str], title: str) -> str:
     if any(k in combined for k in ["keyboard", "diy kit", "barebone"]):
         return "keyboard"
     return "other"
-
+def parse_price(raw: str) -> float:
+    """Convert price strings like '1,299.00' or '$18.00' into a float."""
+    cleaned = raw.replace(",", "").replace("$", "").strip()
+    return float(cleaned)
 def normalize_listing(listing: RawListing) -> Product:
     product_type_lower = listing.product_type.lower()
     if "keyboard" in product_type_lower:
@@ -131,7 +134,7 @@ def normalize_listing(listing: RawListing) -> Product:
                 color_name=color_name or "N/A",
                 color_hex=resolve_color_hex(color_name) if color_name else None,
                 plate_material=plate_material,
-                price=float(v.price),
+                price=parse_price(v.price),
                 sku=v.sku,
                 in_stock=True,
             )

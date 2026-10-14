@@ -96,4 +96,23 @@ def test_normalize_listing_handles_comma_in_price():
             {"title": "Default Title", "price": "1,299.00", "sku": "EXPENSIVE-SKU", "option1": None, "option2": None}
         ]
     )
-    pass  # remove this line once you fill in the test above
+    product = normalize_listing(listing)
+    assert product.color_variants[0].price == 1299.00
+def test_normalize_listing_handles_dollar_sign_in_price():
+    listing = make_fake_listing(
+        variants=[
+            {"title": "Default Title", "price": "$18.00", "sku": "DOLLAR-SKU", "option1": None, "option2": None}
+        ]
+    )
+    product = normalize_listing(listing)
+    assert product.color_variants[0].price == 18.00
+
+
+def test_normalize_listing_handles_whole_number_price():
+    listing = make_fake_listing(
+        variants=[
+            {"title": "Default Title", "price": "150", "sku": "WHOLE-SKU", "option1": None, "option2": None}
+        ]
+    )
+    product = normalize_listing(listing)
+    assert product.color_variants[0].price == 150.0
