@@ -66,6 +66,10 @@ class ColorVariant(BaseModel):
 
 class Product(BaseModel):
     canonical_name: str
+    handle: str
+    min_price: float | None = None
+    source_url: str
+    image_url: str | None = None
     type: str  # "keyboard" | "switch" | "keycap" | "other"
     brand: str
     product_type_raw: str
@@ -139,12 +143,20 @@ def normalize_listing(listing: RawListing) -> Product:
                 in_stock=True,
             )
         )
+    prices = [cv.price for cv in color_variants]
+    min_price = min(prices) if prices else None
+    image_url = listing.images[0].src if listing.images else None
+    source_url = f"https://mechanicalkeyboards.com/products/{listing.handle}"
 
     return Product(
         canonical_name=listing.title,
+	    handle=listing.handle,
         type=product_type,
         brand=listing.vendor,
         product_type_raw=listing.product_type,
+        min_price=min_price,
+        source_url=source_url,
+        image_url=image_url,
         color_variants=color_variants,
         tags=[t.strip() for t in listing.tags.split(",") if t.strip()],
     )

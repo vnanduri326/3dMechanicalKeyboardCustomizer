@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy import Column, String, DateTime, Boolean, Numeric
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
 import uuid
@@ -38,6 +38,11 @@ class Product(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
 
     canonical_name = Column(String, nullable=False)
+    handle = Column(String, nullable=True, unique=True)
+    min_price = Column(Numeric(10,2), nullable=True)
+    source_url = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
+
     type = Column(String, nullable=False)
     brand = Column(String, nullable=False)
     product_type_raw = Column(String, nullable=False)
