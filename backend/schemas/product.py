@@ -1,20 +1,72 @@
 # schemas/product.py
 from pydantic import BaseModel
 from typing import Optional
-from schemas.raw_listing import RawListing
+from schemas.raw_listing import Image, RawListing, Variant
+from fetcher.color_sample import sample_hex_from_url
 
 COLOR_HEX_MAP: dict[str, str] = {
+    "Anodized Black": "#1a1a1a",
+    "Anodized Grey-gold": "#8a7a5c",
+    "Anodized Ink": "#2c2a4a",
+    "Anodized Nimbus": "#a8b0bc",
+    "Anodized Sand Gold": "#c9a869",
+    "Anodized Scarlet": "#c41e3a",
+    "Anodized Silver": "#c0c0c0",
+    "Anodized Tyrian": "#8b5a9f",
+    "Aquamarine": "#7fffd4",
     "Black": "#1a1a1a",
+    "Blue": "#3b6ea5",
+    "Blush Pink": "#de98a0",
+    "Bubble Dragon Green": "#3d8b6e",
+    "Carbon Black": "#0d0d0d",
+    "Charcoal": "#36454f",
+    "Classic Black": "#1a1a1a",
+    "Console Eclipse Grey": "#3a3a3a",
+    "Crimson Blaze": "#dc143c",
+    "Dark Green": "#006400",
     "Dark Grey": "#4a4a4a",
-    "Grey": "#808080",
-    "White": "#f5f5f5",
-    "Purple": "#8b5a9f",
-    "Tyrian Purple": "#8b5a9f",
-    "Ice Blue": "#a8c6d8",
+    "Dusty Rose": "#c08081",
     "First Light": "#e8dcc8",
+    "Grey": "#808080",
+    "Gunmetal Grey": "#2a3439",
+    "Ice Blue": "#a8c6d8",
+    "Imp Basalt Grey": "#4a4640",
+    "Light Pink": "#f4c2d7",
+    "Luna": "#d6dce4",
+    "Mint Breeze": "#98d7c2",
+    "Navy": "#000080",
+    "Nebula": "#4b3f72",
+    "Nickel": "#727472",
+    "Orange": "#ff8c00",
+    "Petal": "#f2c4ce",
+    "Pink": "#ffc0cb",
+    "Purple": "#8b5a9f",
+    "Red": "#c41e3a",
+    "Retro Console Retro White": "#f0ebe3",
+    "Retro Grey": "#6b6b6b",
     "Sage": "#9caf88",
     "Sand Gold": "#c9a869",
-    "Light Pink": "#f4c2d7",
+    "Shadow Black": "#121212",
+    "Shell White": "#f7f4ef",
+    "Silver": "#c0c0c0",
+    "Sky Blue": "#87ceeb",
+    "Slate Blue": "#6a5acd",
+    "Snow": "#fffafa",
+    "Soy": "#d4c4a8",
+    "SpaceGrey": "#65737e",
+    "Spray-Coated Baby Pink": "#f4c2d7",
+    "Spray-Coated Butter Yellow": "#f5e6a3",
+    "Spray-Coated Iceberg": "#d6eaf5",
+    "Spray-Coated Spark": "#f5c518",
+    "Spray-coated Cream": "#fffdd0",
+    "Taupe Grey": "#8b7d6b",
+    "Teal": "#008080",
+    "Tyrian Purple": "#8b5a9f",
+    "Volt": "#ceff00",
+    "Warm Silver": "#b8b0a4",
+    "White": "#f5f5f5",
+    "White Peach Pink": "#ffdab9",
+    "Yellow": "#ffd700",
 }
 
 class ColorVariant(BaseModel):
@@ -37,6 +89,31 @@ def resolve_color_hex(color_name: str) -> Optional[str]:
     if not color_name or color_name == "N/A":
         return None
     return COLOR_HEX_MAP.get(color_name)
+
+
+def find_variant_image(variant: Variant, images: list[Image]) -> Optional[Image]:
+    """Match a variant to its product photo by image_id, then by variant_ids."""
+    if variant.image_id is not None:
+        for image in images:
+            if image.id == variant.image_id:
+                return image
+    if variant.id is not None:
+        for image in images:
+            if variant.id in image.variant_ids:
+                return image
+    return None
+
+
+def hex_for_variant(color_name: str, variant: Variant, images: list[Image]) -> Optional[str]:
+    """Sample the variant photo when one is linked; otherwise use the exact color map."""
+    if not color_name or color_name == "N/A":
+        return None
+    image = find_variant_image(variant, images)
+    if image is not None and image.src:
+        sampled = sample_hex_from_url(image.src)
+        if sampled:
+            return sampled
+    return resolve_color_hex(color_name)
 
 def detect_product_type(raw_type: str, tags: list[str], title: str) -> str:
     combined = f"{raw_type} {' '.join(tags)} {title}".lower()
@@ -65,7 +142,7 @@ def normalize_listing(listing: RawListing) -> Product:
         color_variants.append(
             ColorVariant(
                 color_name=color_name,
-                color_hex=resolve_color_hex(color_name),
+                color_hex=hex_for_variant(color_name, v, listing.images),
                 plate_material=v.option2,
                 price=float(v.price),
                 sku=v.sku,
