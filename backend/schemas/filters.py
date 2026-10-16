@@ -36,6 +36,6 @@ def get_filters(db: Session = Depends(get_db)):
     )
     return FiltersOut(
         types=[FilterOption(value=v,count=c) for v, c in type_rows],
-        types=[FilterOption(value=v,count=c) for v, c in brand_rows]
+        brand=[FilterOption(value=v,count=c) for v, c in brand_rows]
     )    
     
