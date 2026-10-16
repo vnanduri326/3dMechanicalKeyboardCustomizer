@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy import Column, String, DateTime, Boolean, Numeric
 from sqlalchemy.dialects.postgresql import JSONB
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from storage.db import Base
 
@@ -12,12 +12,39 @@ class RawPage(Base):
     source = Column(String, nullable=False, default="mechanicalkeyboards.com")
     handle = Column(String, nullable=False)
     raw_json = Column(JSONB, nullable=False)
-    fetched_at = Column(DateTime, default=datetime.utcnow)
+    fetched_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     processed = Column(Boolean, default=False)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("id", str(uuid.uuid4()))
         kwargs.setdefault("source", "mechanicalkeyboards.com")
-        kwargs.setdefault("fetched_at", datetime.utcnow())
+        kwargs.setdefault("fetched_at", datetime.now(timezone.utc))
         kwargs.setdefault("processed", False)
         super().__init__(**kwargs)
+
+class ColorVariant(Base):
+    __tablename__ = "color_variants"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    color_name = Column(String, nullable=False)
+    color_hex = Column(String, nullable=True)
+    plate_material = Column(String, nullable=True)
+    price = Column(String, nullable=False)
+    sku = Column(String, nullable=False)
+    in_stock = Column(Boolean, default=True)
+
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    canonical_name = Column(String, nullable=False)
+    handle = Column(String, nullable=True, unique=True)
+    min_price = Column(Numeric(10,2), nullable=True)
+    source_url = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
+
+    type = Column(String, nullable=False)
+    brand = Column(String, nullable=False)
+    product_type_raw = Column(String, nullable=False)
+    color_variants = Column(JSONB, default=list)
+    tags = Column(JSONB, default=list)
