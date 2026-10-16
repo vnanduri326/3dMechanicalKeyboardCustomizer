@@ -9,6 +9,10 @@ def test_resolve_color_hex_unknown_color_returns_none():
     assert resolve_color_hex("Some Made Up Color") is None
 
 
+def test_resolve_color_hex_matches_keyword_inside_name():
+    assert resolve_color_hex("Midnight Navy") == "#000080"
+
+
 def test_color_variant_creation():
     variant = ColorVariant(
         color_name="Ice Blue",

@@ -90,10 +90,40 @@ class Product(BaseModel):
     color_variants: list[ColorVariant] = []
     tags: list[str] = []
 
+COLOR_KEYWORDS: list[tuple[str, str]] = [
+    ("dark grey", "#4a4a4a"),
+    ("ice blue", "#a8c6d8"),
+    ("light pink", "#f4c2d7"),
+    ("sand gold", "#c9a869"),
+    ("black", "#1a1a1a"),
+    ("white", "#f5f5f5"),
+    ("grey", "#808080"),
+    ("gray", "#808080"),
+    ("silver", "#c0c0c0"),
+    ("gold", "#c9a869"),
+    ("pink", "#f4c2d7"),
+    ("purple", "#8b5a9f"),
+    ("blue", "#3b6ea5"),
+    ("green", "#3d8b6e"),
+    ("red", "#c41e3a"),
+    ("yellow", "#ffd700"),
+    ("orange", "#ff8c00"),
+    ("navy", "#000080"),
+    ("teal", "#008080"),
+]
+
+
 def resolve_color_hex(color_name: str) -> Optional[str]:
     if not color_name or color_name == "N/A":
         return None
-    return COLOR_HEX_MAP.get(color_name)
+    exact = COLOR_HEX_MAP.get(color_name)
+    if exact:
+        return exact
+    lowered = color_name.lower()
+    for keyword, hex_code in COLOR_KEYWORDS:
+        if keyword in lowered:
+            return hex_code
+    return None
 
 
 def find_variant_image(variant: Variant, images: list[Image]) -> Optional[Image]:
