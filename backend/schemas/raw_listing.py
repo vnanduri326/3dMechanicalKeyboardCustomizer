@@ -27,6 +27,7 @@ class Image(BaseModel):
 
 class RawListing(BaseModel):
     """Validated shape of one product's raw JSON from mechanicalkeyboards.com."""
+    handle: str = ""
     title: str
     vendor: str
     product_type: str

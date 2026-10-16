@@ -23,6 +23,8 @@ def test_color_variant_creation():
 def test_product_creation_with_variants():
     product = Product(
         canonical_name="Evoworks Evo75",
+        handle="evoworks-evo75",
+        source_url="https://mechanicalkeyboards.com/products/evoworks-evo75",
         type="keyboard",
         brand="Evoworks",
         product_type_raw="75% Keyboards",
