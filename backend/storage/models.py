@@ -22,16 +22,16 @@ class RawPage(Base):
         kwargs.setdefault("processed", False)
         super().__init__(**kwargs)
 
-class ColorVariant(Base):
-    __tablename__ = "color_variants"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+# class ColorVariant(Base):
+#     __tablename__ = "color_variants"
+#     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
 
-    color_name = Column(String, nullable=False)
-    color_hex = Column(String, nullable=True)
-    plate_material = Column(String, nullable=True)
-    price = Column(String, nullable=False)
-    sku = Column(String, nullable=False)
-    in_stock = Column(Boolean, default=True)
+#     color_name = Column(String, nullable=False)
+#     color_hex = Column(String, nullable=True)
+#     plate_material = Column(String, nullable=True)
+#     price = Column(String, nullable=False)
+#     sku = Column(String, nullable=False)
+#     in_stock = Column(Boolean, default=True)
 
 class Product(Base):
     __tablename__ = "products"

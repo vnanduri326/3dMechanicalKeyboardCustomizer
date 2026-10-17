@@ -1,4 +1,8 @@
 pyproject.toml
+api/__init__.py
+api/filters.py
+api/main.py
+api/schemas.py
 fetcher/__init__.py
 fetcher/collection.py
 fetcher/product.py
