@@ -32,7 +32,7 @@ def seed_data():
                 type="keycaps",
                 min_price=140.00,
                 handle="gmk-bento-r2",
-                product_type_raw="keycaps"
+                product_type_raw="keycaps"                
             )
         ]
 
