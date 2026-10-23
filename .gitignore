@@ -8,6 +8,10 @@ __pycache__/
 node_modules/
 dist/
 
+# Docker / Database Volumes
+postgres_data/
+*.db
+
 # Assets
 frontend/public/models/*.glb
 assets-source/downloaded/
