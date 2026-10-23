@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from typing import Optional
 
 
@@ -29,24 +28,18 @@ class RawListing(BaseModel):
     """Validated shape of one product's raw JSON from mechanicalkeyboards.com."""
     handle: str = ""
     title: str
+    handle: Optional[str] = None
     vendor: str
     product_type: str
-    tags: str
-    variants: list[Variant]
-    options: list[Option]
-    images: list[Image]
+    tags: list[str] = Field(default_factory=list)
+    variants: list[dict] = Field(default_factory=list)
+    images: list[dict] = Field(default_factory=list)
+    options: list[dict] = Field(default_factory=list)
     body_html: Optional[str] = None
 
-
-if __name__ == "__main__":
-    sample = {
-        "title": "Evoworks Evo75 Aluminum Hotswap Wireless Keyboard",
-        "vendor": "Evoworks",
-        "product_type": "75% Keyboards",
-        "tags": "75, aluminum, hotswap",
-        "variants": [{"title": "Black / FR4", "price": "169.90", "sku": "EVO-EVO75-BKFR4", "option1": "Black", "option2": "FR4"}],
-        "options": [{"name": "Color", "values": ["Black", "Purple"]}],
-        "images": [{"src": "https://cdn.shopify.com/example.jpg", "variant_ids": []}],
-    }
-    listing = RawListing(**sample)
-    print(listing.title, "validated OK")
+    @field_validator("tags", mode="before")
+    @classmethod
+    def parse_tags(cls, v):
+        if isinstance(v, str):
+            return [t.strip() for t in v.split(",") if t.strip()]
+        return v or []

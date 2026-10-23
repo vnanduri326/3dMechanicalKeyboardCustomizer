@@ -1,14 +1,34 @@
-version: "3.9"
+version: '3.8'
+
 services:
   db:
-    image: postgres:16
+    image: postgres:15-alpine
+    container_name: keyboard_customizer_db
+    restart: always
     environment:
-      POSTGRES_USER: keyboard_user
-      POSTGRES_PASSWORD: keyboard_pass
-      POSTGRES_DB: keyboards
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: keyboard_customizer
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: keyboard_customizer_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  # <-- This syncs your local backend files and migrations live
+    command: sh -c "alembic upgrade head && uvicorn api.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespassword@db:5432/keyboard_customizer
+    depends_on:
+      - db
+
 volumes:
-  pgdata:
+  postgres_data:

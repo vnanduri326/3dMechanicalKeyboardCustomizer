@@ -1,6 +1,7 @@
-# schemas/product.py
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 from schemas.raw_listing import Image, RawListing, Variant
 from fetcher.color_sample import sample_hex_from_url
 
@@ -35,6 +36,21 @@ COLOR_HEX_MAP: dict[str, str] = {
     "Luna": "#d6dce4",
     "Mint Breeze": "#98d7c2",
     "Navy": "#000080",
+    "Pink": "#FFC0Cb",
+    "Red": "#FF0000",
+    "Warm Silver": "#D7D0C6",
+    "Dark Green": "#006400",
+    "Slate Blue": "#6A5ACD",
+    "Soy": "#6A6051",
+    "Taupe Grey": "#8B8589",
+    "Aquamarine": "#7FFFD4",
+    "Blush Pink": "#DE5D83",
+    "Carbon Black": "#0C0A00",
+    "Classic Black": "#000000",
+    "Dusty Rose": "#C9A6A6",
+    "First Light": "#EFE2DE",
+    "Gunmetal Grey": "#818589",
+    "Nebula": "#CBDBD6",
     "Nebula": "#4b3f72",
     "Nickel": "#727472",
     "Orange": "#ff8c00",
@@ -69,21 +85,23 @@ COLOR_HEX_MAP: dict[str, str] = {
     "Yellow": "#ffd700",
 }
 
+
 class ColorVariant(BaseModel):
     color_name: str
     color_hex: Optional[str] = None
     plate_material: Optional[str] = None
-    switch_type: Optional[str] = None   # NEW
     price: float
     sku: str
     in_stock: bool = True
+    options: dict[str, str] = {}  # every option on this variant, by its real name
+
 
 class Product(BaseModel):
     canonical_name: str
-    handle: str
-    min_price: float | None = None
-    source_url: str
-    image_url: str | None = None
+    handle: Optional[str] = None
+    min_price: Optional[float] = None
+    source_url: Optional[str] = None
+    image_url: Optional[str] = None
     type: str  # "keyboard" | "switch" | "keycap" | "other"
     brand: str
     product_type_raw: str
@@ -150,76 +168,81 @@ def hex_for_variant(color_name: str, variant: Variant, images: list[Image]) -> O
             return sampled
     return resolve_color_hex(color_name)
 
-def detect_product_type(raw_type: str, tags: list[str], title: str) -> str:
-    combined = f"{raw_type} {' '.join(tags)} {title}".lower()
-    if any(k in combined for k in ["switch", "switches"]):
-        return "switch"
-    if any(k in combined for k in ["keycap", "keycaps", "caps"]):
-        return "keycap"
-    if any(k in combined for k in ["keyboard", "diy kit", "barebone"]):
-        return "keyboard"
-    return "other"
-def parse_price(raw: str) -> float:
+
+def parse_price(raw) -> float:
     """Convert price strings like '1,299.00' or '$18.00' into a float."""
-    cleaned = raw.replace(",", "").replace("$", "").strip()
+    cleaned = str(raw).replace(",", "").replace("$", "").strip()
     return float(cleaned)
+
+
+def _get(obj, key, default=None):
+    """Read a key from a dict, or an attribute from an object."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
 def normalize_listing(listing: RawListing) -> Product:
-    product_type_lower = listing.product_type.lower()
-    if "keyboard" in product_type_lower:
+    lowered_type = listing.product_type.lower()
+    if "keyboard" in lowered_type:
         product_type = "keyboard"
-    elif "switch" in product_type_lower:
+    elif "switch" in lowered_type:
         product_type = "switch"
-    elif "keycap" in product_type_lower:
+    elif "keycap" in lowered_type:
         product_type = "keycap"
     else:
         product_type = "other"
 
-    # Figure out which option slot (option1 or option2) is actually "Color"
-    color_option_index = None  # will be 1 or 2
-    for i, opt in enumerate(listing.options, start=1):
-        if opt.name.lower() == "color":
-            color_option_index = i
-            break
+    option_names = [str(_get(o, "name", "")) for o in (listing.options or [])]
 
-    color_variants = []
-    for v in listing.variants:
-        if color_option_index == 1:
-            raw_color = v.option1
-        elif color_option_index == 2:
-            raw_color = v.option2
-        else:
-            raw_color = None  # this product has no "Color" option at all
+    color_variants: list[ColorVariant] = []
+    for v in listing.variants or []:
+        price_raw = _get(v, "price")
+        if price_raw in (None, ""):
+            continue  # a variant with no price can't be listed
 
-        color_name = raw_color if raw_color not in (None, "Default Title", "") else None
-
-        # plate material (or any non-color second attribute) — just grab whichever
-        # option ISN'T the color one, for informational purposes
-        if color_option_index == 1:
-            plate_material = v.option2
-        else:
-            plate_material = v.option1
-
-        if plate_material in (None, "Default Title", ""):
-            plate_material = None
+        values = [_get(v, "option1"), _get(v, "option2"), _get(v, "option3")]
+        opts = {
+            name: str(value)
+            for name, value in zip(option_names, values)
+            if value not in (None, "", "Default Title")
+        }
+        color_name = next(
+            (val for name, val in opts.items() if name.lower() in ("color", "colour")),
+            None,
+        )
+        plate_material = next(
+            (val for name, val in opts.items() if "plate" in name.lower()),
+            None,
+        )
 
         color_variants.append(
             ColorVariant(
                 color_name=color_name or "N/A",
                 color_hex=hex_for_variant(color_name, v, listing.images) if color_name else None,
                 plate_material=plate_material,
-                price=parse_price(v.price),
-                sku=v.sku,
-                in_stock=True,
+                price=parse_price(price_raw),
+                sku=str(_get(v, "sku", "") or ""),
+                in_stock=bool(_get(v, "available", True)),
+                options=opts,
             )
         )
+
     prices = [cv.price for cv in color_variants]
     min_price = min(prices) if prices else None
-    image_url = listing.images[0].src if listing.images else None
-    source_url = f"https://mechanicalkeyboards.com/products/{listing.handle}"
+
+    images = listing.images or []
+    image_url = _get(images[0], "src") if images else None
+
+    source_url = (
+        f"https://mechanicalkeyboards.com/products/{listing.handle}"
+        if listing.handle
+        else None
+    )
 
     return Product(
         canonical_name=listing.title,
-	    handle=listing.handle,
+        handle=listing.handle,
         type=product_type,
         brand=listing.vendor,
         product_type_raw=listing.product_type,
@@ -227,5 +250,5 @@ def normalize_listing(listing: RawListing) -> Product:
         source_url=source_url,
         image_url=image_url,
         color_variants=color_variants,
-        tags=[t.strip() for t in listing.tags.split(",") if t.strip()],
+        tags=listing.tags,
     )
