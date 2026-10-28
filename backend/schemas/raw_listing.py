@@ -1,3 +1,4 @@
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 
 
@@ -26,9 +27,8 @@ class Image(BaseModel):
 
 class RawListing(BaseModel):
     """Validated shape of one product's raw JSON from mechanicalkeyboards.com."""
-    handle: str = ""
     title: str
-    handle: Optional[str] = None
+    handle: str = ""
     vendor: str
     product_type: str
     tags: list[str] = Field(default_factory=list)

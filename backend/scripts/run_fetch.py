@@ -54,3 +54,18 @@ def process_and_store_handle(handle: str, source: str = "mechanicalkeyboards.com
         print(f"Fetched OK, but normalization failed for {handle}: {e}")
     finally:
         db.close()
+
+
+DEFAULT_HANDLES = [
+    "evoworks-evo75-aluminum-hotswap-wireless-keyboard",
+    "ducky-one-x-full-size-inductive-keyboard",
+    "ducky-yellow-backlit-31-key-oem-profile-double-shot-abs-rubber-keycap-set",
+]
+
+
+if __name__ == "__main__":
+    import sys
+
+    handles = sys.argv[1:] if len(sys.argv) > 1 else DEFAULT_HANDLES
+    for handle in handles:
+        process_and_store_handle(handle)
