@@ -1,25 +1,60 @@
-import { useState } from 'react';
-import { mockProducts } from './mockData';
-import { ProductCard } from './components/ProductCard';
+// frontend/src/App.tsx
+import React, { useState, useEffect } from 'react';
+import { Product, CustomizerSelection } from './types';
+import { fetchProducts } from './services/api';
 import { FilterPanel } from './components/FilterPanel';
+import { ProductCard } from './components/ProductCard';
 
-function App() {
-  const [selectedType, setSelectedType] = useState<string | null>(null);
+export default function App() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selection, setSelection] = useState<CustomizerSelection>({});
 
-  const filtered = selectedType
-    ? mockProducts.filter((p) => p.productType === selectedType)
-    : mockProducts;
+  useEffect(() => {
+    const typeFilter = selectedType === 'all' ? undefined : selectedType;
+    fetchProducts(typeFilter, selectedTags, searchTerm)
+      .then(setProducts)
+      .catch((err) => console.error('Error loading products:', err));
+  }, [selectedType, selectedTags, searchTerm]);
+
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleSelectProduct = (product: Product) => {
+    setSelection((prev) => ({
+      ...prev,
+      [product.type === 'keyboard' ? 'case' : product.type]: product,
+    }));
+  };
 
   return (
-    <div className="flex">
-      <FilterPanel onSelectType={setSelectedType} />
-      <div className="grid grid-cols-3 gap-4 p-4">
-        {filtered.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+    <div className="flex h-screen bg-slate-50">
+      <FilterPanel
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedTags={selectedTags}
+        onTagToggle={handleTagToggle}
+      />
+
+      <main className="flex-1 p-6 overflow-y-auto">
+        <h1 className="text-2xl font-bold mb-6 font-mono">3D Keyboard Customizer</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {products.map((p) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              onSelect={() => handleSelectProduct(p)}
+            />
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
-
-export default App;

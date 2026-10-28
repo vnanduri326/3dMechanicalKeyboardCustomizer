@@ -1,23 +1,41 @@
+// frontend/src/components/ProductCard.tsx
+import React from 'react';
 import { Product } from '../types';
 
-export function ProductCard({ product }: { product: Product }) {
-  const basePrice = product.colorVariants[0]?.price ?? 0;
+interface ProductCardProps {
+  product: Product;
+  onSelect?: (product: Product) => void; // Add this line
+}
 
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
   return (
-    <div className="border rounded-lg p-4 shadow-sm">
-      <h3 className="font-semibold">{product.name}</h3>
-      <p className="text-sm text-gray-500">{product.brand}</p>
-      <p className="mt-2 font-medium">${basePrice.toFixed(2)}</p>
-      <div className="flex gap-1 mt-2">
-        {product.colorVariants.map((v) => (
-          <div
-            key={v.sku}
-            className="w-5 h-5 rounded-full border"
-            style={{ backgroundColor: v.colorHex }}
-            title={v.colorName}
-          />
+    <div 
+      onClick={() => onSelect?.(product)}
+      className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md cursor-pointer transition-all"
+    >
+      <h3 className="font-bold text-lg font-mono">{product.canonical_name}</h3>
+      <p className="text-sm text-gray-500 font-mono capitalize">{product.brand} • {product.type}</p>
+      
+      <div className="mt-2 flex flex-wrap gap-1">
+        {product.tags?.map((tag) => (
+          <span key={tag} className="px-2 py-0.5 text-xs bg-slate-100 rounded text-slate-600 font-mono">
+            {tag}
+          </span>
         ))}
+      </div>
+
+      <div className="mt-4 flex justify-between items-center">
+        <span className="font-bold text-emerald-600 font-mono">${product.min_price}</span>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(product);
+          }}
+          className="px-3 py-1 text-xs bg-slate-900 text-white rounded font-mono hover:bg-slate-700"
+        >
+          Select
+        </button>
       </div>
     </div>
   );
-}
+};
