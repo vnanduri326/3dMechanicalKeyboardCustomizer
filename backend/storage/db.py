@@ -1,18 +1,13 @@
-from pathlib import Path
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from dotenv import load_dotenv
 
-_backend_dir = Path(__file__).resolve().parent.parent
-_repo_root = _backend_dir.parent
-load_dotenv(_repo_root / ".env")
-load_dotenv(_backend_dir / ".env")
+load_dotenv()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg://postgres:postgrespassword@localhost:5433/keyboard_customizer",
+    "postgresql+psycopg://keyboard_user:keyboard_pass@localhost:5432/keyboards",
 )
 
 engine = create_engine(DATABASE_URL)

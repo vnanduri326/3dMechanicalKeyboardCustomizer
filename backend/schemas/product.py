@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from schemas.raw_listing import RawListing
+from schemas.raw_listing import Image, RawListing, Variant
 from fetcher.color_sample import sample_hex_from_url
 
 COLOR_HEX_MAP: dict[str, str] = {
@@ -144,37 +144,26 @@ def resolve_color_hex(color_name: str) -> Optional[str]:
     return None
 
 
-def _get(obj, key, default=None):
-    """Read a key from a dict, or an attribute from an object."""
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    return getattr(obj, key, default)
-
-
-def find_variant_image(variant, images: list) -> Optional[object]:
+def find_variant_image(variant: Variant, images: list[Image]) -> Optional[Image]:
     """Match a variant to its product photo by image_id, then by variant_ids."""
-    image_id = _get(variant, "image_id")
-    if image_id is not None:
+    if variant.image_id is not None:
         for image in images:
-            if _get(image, "id") == image_id:
+            if image.id == variant.image_id:
                 return image
-    variant_id = _get(variant, "id")
-    if variant_id is not None:
+    if variant.id is not None:
         for image in images:
-            variant_ids = _get(image, "variant_ids") or []
-            if variant_id in variant_ids:
+            if variant.id in image.variant_ids:
                 return image
     return None
 
 
-def hex_for_variant(color_name: str, variant, images: list) -> Optional[str]:
+def hex_for_variant(color_name: str, variant: Variant, images: list[Image]) -> Optional[str]:
     """Sample the variant photo when one is linked; otherwise use the exact color map."""
     if not color_name or color_name == "N/A":
         return None
     image = find_variant_image(variant, images)
-    src = _get(image, "src") if image is not None else None
-    if src:
-        sampled = sample_hex_from_url(src)
+    if image is not None and image.src:
+        sampled = sample_hex_from_url(image.src)
         if sampled:
             return sampled
     return resolve_color_hex(color_name)
@@ -184,6 +173,13 @@ def parse_price(raw) -> float:
     """Convert price strings like '1,299.00' or '$18.00' into a float."""
     cleaned = str(raw).replace(",", "").replace("$", "").strip()
     return float(cleaned)
+
+
+def _get(obj, key, default=None):
+    """Read a key from a dict, or an attribute from an object."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
 
 
 def normalize_listing(listing: RawListing) -> Product:

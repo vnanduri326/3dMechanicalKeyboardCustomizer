@@ -3,7 +3,7 @@ from io import BytesIO
 from PIL import Image
 
 from fetcher.color_sample import sample_hex_from_bytes, sample_hex_from_url
-from schemas.product import _get, find_variant_image, hex_for_variant, normalize_listing
+from schemas.product import find_variant_image, hex_for_variant, normalize_listing
 from schemas.raw_listing import Image as ListingImage
 from schemas.raw_listing import RawListing, Variant
 
@@ -59,7 +59,7 @@ def test_find_variant_image_by_image_id():
     listing = _listing()
     found = find_variant_image(listing.variants[0], listing.images)
     assert found is not None
-    assert _get(found, "src", "").endswith("black.jpg")
+    assert found.src.endswith("black.jpg")
 
 
 def test_find_variant_image_by_variant_ids_when_image_id_missing():
@@ -67,7 +67,7 @@ def test_find_variant_image_by_variant_ids_when_image_id_missing():
     images = [ListingImage(id=5, src="https://cdn.example.com/a.jpg", variant_ids=[10])]
     found = find_variant_image(variant, images)
     assert found is not None
-    assert _get(found, "id") == 5
+    assert found.id == 5
 
 
 def test_find_variant_image_returns_none_when_unlinked():
