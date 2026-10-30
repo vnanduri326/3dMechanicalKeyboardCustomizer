@@ -25,7 +25,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
       </div>
 
       <div className="mt-4 flex justify-between items-center">
-        <span className="font-bold text-emerald-600 font-mono">${product.min_price}</span>
+        <span className="font-bold text-emerald-600 font-mono">
+          {product.min_price != null ? `$${product.min_price.toFixed(2)}` : '—'}
+        </span>
         <button 
           onClick={(e) => {
             e.stopPropagation();

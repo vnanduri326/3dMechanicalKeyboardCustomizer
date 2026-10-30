@@ -1,5 +1,5 @@
 // frontend/src/App.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Product, CustomizerSelection } from './types';
 import { fetchProducts } from './services/api';
 import { FilterPanel } from './components/FilterPanel';
@@ -45,6 +45,11 @@ export default function App() {
 
       <main className="flex-1 p-6 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-6 font-mono">3D Keyboard Customizer</h1>
+        {products.length === 0 && (
+          <p className="text-slate-500 font-mono text-sm mb-4">
+            No products loaded. Start the API with docker compose and load data via run_fetch.
+          </p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {products.map((p) => (
             <ProductCard
@@ -54,6 +59,11 @@ export default function App() {
             />
           ))}
         </div>
+        {Object.keys(selection).length > 0 && (
+          <p className="mt-6 text-sm text-slate-600 font-mono">
+            Selected: {Object.keys(selection).join(', ')}
+          </p>
+        )}
       </main>
     </div>
   );
