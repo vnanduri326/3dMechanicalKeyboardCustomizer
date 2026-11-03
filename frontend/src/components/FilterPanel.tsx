@@ -19,52 +19,33 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   onTagToggle,
 }) => {
   return (
-    <aside className="w-64 bg-slate-100 p-4 border-r border-slate-300">
-      <h2 className="text-xl font-bold mb-4 font-mono">Filters</h2>
-
-      {/* Search */}
+    <div className="kc-filter-body">
+      {/* search function */}
       <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full p-2 border rounded font-mono text-sm"
-        />
+        <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => onSearchChange(e.target.value)} className="w-full p-2 border rounded font-mono text-sm" />
       </div>
 
-      {/* Category Selection */}
+      {/* category selection */}
       <div className="mb-6">
         <h3 className="font-semibold mb-2 font-mono">Category</h3>
         {['all', 'keyboard', 'switch', 'keycaps', 'pcb_plate'].map((cat) => (
           <label key={cat} className="block text-sm capitalize mb-1 font-mono">
-            <input
-              type="radio"
-              name="category"
-              checked={selectedType === cat}
-              onChange={() => onTypeChange(cat)}
-              className="mr-2"
-            />
+            <input type="radio" name="category" checked={selectedType === cat} onChange={() => onTypeChange(cat)} className="mr-2" />
             {cat}
           </label>
         ))}
       </div>
 
-      {/* Spec Tags */}
+      {/* spec tags */}
       <div>
-        <h3 className="font-semibold mb-2 font-mono">Specs</h3>
+        <h3 className="font semibold mb-2 font-mono">Specs</h3>
         {['feel:linear', 'feel:tactile', 'layout:75%', 'profile:cherry'].map((tag) => (
           <label key={tag} className="block text-sm mb-1 font-mono">
-            <input
-              type="checkbox"
-              checked={selectedTags.includes(tag)}
-              onChange={() => onTagToggle(tag)}
-              className="mr-2"
-            />
+            <input type="checkbox" checked={selectedTags.includes(tag)} onChange={() => onTagToggle(tag)} className="mr-2" />
             {tag}
-          </label>
+          </label>  
         ))}
       </div>
-    </aside>
+    </div>
   );
 };

@@ -1,0 +1,452 @@
+/* font import */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Press+Start+2P&display=swap');
+
+/* colours, light-mode; dark mode comes after */
+:root {
+    --mid: #E3EEED;
+    --filter: #C6E2F8;
+    --cart: #c7ddb9;
+    --edge: #9db3c8;
+    --info-bg: #e6c7d4;
+    --info-stroke: #501930;
+    --text: #000000;
+    --ph-side: #d6d6d6;
+    --ph-line: #555555;
+    --accent: #e58ea9;
+    --grid: #8fba7f;
+    --grid-bg: #dbe9d3;
+    --btn: #c6e2f8;
+    --btn-line: #3c5568;
+    --badge: #f2b8cd;
+    --field: #e9f4ee;
+    --cart-fab: #c8ddc4;
+    --cart-fab-line: #93b288;
+    --halo-on: 0;
+    --fs-heading: 1.17rem;
+    --fs-option: 1rem;
+    color-scheme: light;
+}
+
+/* dark mode */
+@media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) {
+        --mid: #1b2528;
+        --filter: #17364f;
+        --cart: #2a5a1c;
+        --edge: #5c86a8;
+        --info-bg: #501930;
+        --info-stroke: #E6C7D4;
+        --text: #FFFFFF;
+        --title-fill: #FFFFFF;
+        --title-stroke: #DBAFC1;
+        --title-stroke-w: 2px;
+        --ph-side: #c9c9c9;
+        --ph-lline: #cfe3f3;
+        --grid: #3f7a34;
+        --grid-bg: #bfd8b6;
+        --btn: #102334;
+        --btn-line: #cfe3f3;
+        --badge: #501930;
+        --field: #0f1b1d;
+        --color-scheme: dark;
+        --cart-fab: #27471f; 
+        --cart-fab-line: #c9ddc4;
+        --halo-on: 1;
+    }
+}
+
+/* dark vals, applied when light/dark button is used */
+    :root[data-theme="dark"]{
+        --mid: #1b2528;
+        --filter: #17364f;
+        --cart: #2a5a1c;
+        --edge: #5c86a8;
+        --info-bg: #501930;
+        --info-stroke: #E6C7D4;
+        --text: #FFFFFF;
+        --title-fill: #FFFFFF;
+        --title-stroke: #DBAFC1;
+        --title-stroke-w: 2px;
+        --ph-side: #c9c9c9;
+        --ph-lline: #cfe3f3;
+        --grid: #3f7a34;
+        --grid-bg: #bfd8b6;
+        --btn: #102334;
+        --btn-line: #cfe3f3;
+        --badge: #501930;
+        --field: #0f1b1d;
+        --color-scheme: dark;
+        --cart-fab: #27471f; 
+        --cart-fab-line: #c9ddc4;
+        --halo-on: 1;
+    }
+
+    /* base page layout and font */
+    html, body, #root {
+        height: 100%; 
+        margin: 0;
+    }
+    body{
+        font-family: "Comfortaa", system-ui, sans-serif;
+        background: var(--mid);
+        color: var(--text);
+    }
+    .kc-app{
+        display: flex; 
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    .kc-app *, .kc-app *::before, .kc-app *::after{
+        box-sizing: border-box;
+    }
+    .kc-app button{
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+    }
+    .kc-app button:disabled{
+        cursor: default;
+        opacity: 0.5;
+    }
+    .kc-px{
+        font-family: "Press Start 2P", monospace;
+        font-weight: 400;
+    }
+
+    /* panel header */
+    .kc-panel-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .kc-panel-head > svg{
+        width: 24px;
+        height: 24px;
+    }
+    .kc-panel-head h2{
+        margin: 0;
+        font-size: 16px;
+        flex: 1;
+    }
+    .kc-x{
+        background: none;
+        border: 0;
+        padding: 2px;
+        display: grid;
+        place-items: center;
+    }
+    .kc-x svg{
+        width: 22px;
+        height: 22px;
+    }
+
+    /* left panel (cart & filters) */
+    .kc-left {
+        position: relative;
+        width: 270px;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        padding: 12px 14px 78px;
+        overflow-y: auto;
+    }
+    .kc-left-filters{
+        background: var(--filter);
+        --title-stroke: #C7E6Fa;
+    }
+    .kc-left-cart{
+        background: var(--cart);
+        --title-stroke: #93B288;
+    }
+    .kc-left .kc-panel-head h2{
+        color: var(--title-fill);
+        -webkit-text-stroke: var(--title-stroke-w) var(--title-stroke);
+        paint-order: stroke fill;
+    }
+    .kc-halo{
+        stroke:var(--title-stroke);
+        stroke-width: 4px;
+        stroke-opacity: var(--halo-on);
+    }
+    .kc-line{
+        stroke: var(--title-fill);
+        stroke-width: 2px;
+    }
+    .kc-filter-body h3{
+        font-size: var(--fs-heading);
+    }
+    .kc-filter-body label{
+        display: block;
+        margin-bottom: 4px;
+        font-size: var(--fs-option);
+    }
+    .kc-filter-body input[type="text"]{
+        background: var(--field);
+        color: var(--text);
+        border-color: var(--edge);
+    }
+    .kc-cart-items{
+        flex: 1; 
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .kc-cart-item{
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-size: 11px;
+    }
+    .kc-price{
+        margin-left: auto;
+    }
+    .kc-totals{
+        border-top: 1px solid var(--edge);
+        margin-top: 12px;
+        padding-top: 8px;
+        font-size: 12px;
+    }
+    .kc-totals div{
+        display: flex;
+        justify-content: space-between;
+    }
+    .kc-total{
+        margin-top: 8px;
+        font-size: 14px;
+    }
+    .kc-swap{
+        position: absolute;
+        left: 14px;
+        bottom: 14px;
+        display: flex;
+        gap: 10px;
+    }
+    .kc-swap-fixed{
+        position: fixed;
+        z-index: 5;
+    }
+    .kc-fab{
+        position: relative;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        border: 2px solid var(--btn-line);
+        background: var(--btn);
+        display: grid;
+        place-items: center;
+    }
+    .kc-fab svg{
+        width: 26px;
+        height: 26px;
+    }
+    .kc-fab-cart{
+        background: var(--cart-fab);
+        border: 1px solid var(--cart-fab-line);
+    }
+    .kc-badge{
+        position: absolute;
+        top: -9px;
+        right: -9px;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 4px;
+        border-radius: 11px;
+        background: var(--badge);
+        border: 1px solid var(--btn-line);
+        font-size: 10px;
+        display: grid;
+        place-items: center;
+    }
+
+    /* middle section settings */
+    .kc-mid{
+        flex: 1;
+        min-width: 0;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        padding: 20px 28px;
+        overflow-y: auto;
+        background: var(--mid);
+    }
+    .kc-row{
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .kc-grid-btn{
+        flex: none; 
+        width: 58px;
+        height: 52px;
+        border: 2px solid var(--grid);
+        background: var(--grid-bg);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        padding: 5px;
+    }
+    .kc-grid-btn i{
+        background: #EEEEEE;
+        border: 1px solid var(--grid);
+    }
+    .kc-arrow{
+        flex: none;
+        background: none;
+        border: 0;
+        padding: 4px;
+        color: var(--accent);
+    }
+    .kc-arrow svg{
+        width: 22px;
+        height: 34px;
+    }
+    .kc-track{
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        gap: 10px;
+        min-width: 0;
+    }
+    .kc-ph{
+        display: block;
+        position: relative;
+        background: var(--ph-side);
+        object-fit: cover;
+    }
+    .kc-ph svg{
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .kc-ph line{
+        stroke: var(--ph-line);
+        stroke-width: 1;
+        vector-effect: non-scaling-stroke;
+    }
+    .kc-main-btn{
+        padding: 0;
+        border: 2px solid transparent;
+        background: none;
+    }
+    .kc-main-btn.kc-picked{
+        border-color: var(--accent);
+    }
+    .kc-main{
+        width: min(150px, 22vw);
+        aspect-ratio: 1;
+    }
+    .kc-wide{
+        width: min(100%, 380px);
+        aspect-ratio: 380/105;
+    }
+    .kc-fill{
+        width: 100%;
+        height: 100%;
+    }
+    .kc-side{
+        width: min(84px, 13vw);
+        aspect-ratio: 1;
+        background: var(--ph-side);
+    }
+    .kc-side-l{
+        clip-path: polygon(0 14%, 100% 0, 100% 100%, 0 86%);
+    }
+    .kc-side-r{
+        clip-path: polygon(0 0, 100% 14%, 100% 86%, 0 100%);
+    }
+    .kc-theme-btn, .kn-info-open{
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        border: 1px solid var(--edge);
+        background: var(--field);
+        border-radius: 999px;
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+    .kc-info-open{
+        top: auto;
+        bottom: 14px;
+        width: 46px;
+        height: 46px;
+        padding: 0;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: var(--info-bg);
+        border: 1px solid var(--info-stroke);
+        color: var(--text);
+    }
+    .kc-info-open svg{
+        width: 26px;
+        height: 26px;
+        fill: currentColor;
+    }
+
+    /* info section */
+    .kc-info{
+        width: 340px;
+        flex: none;
+        background: var(--info-bg);
+        border-left: 1px solid var(--info-stroke);
+        padding: 16px 18px;
+        overflow-y: auto;
+    }
+    .kc-section-title{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        font-size: 16px;
+        color: var(--title-fill);
+        -webkit-text-stroke: var(--title-stroke-w) var(--title-stroke);
+        paint-order: stroke fill;
+    }
+    .kc-section-title svg{
+        width: 24px;
+        height: 24px;
+        flex: none;
+        fill:var(--title-fill);
+        stroke: var(--title-stroke);
+        stroke-width: calc(var(--title-stroke-w) / 2);
+    }
+    .kc-info .kc-x{
+        color: var(--text);
+    }
+    .kc-info-block{
+        margin-bottom: 22px;
+    }
+    .kc-info-block h3{
+        margin: 0 0 8px;
+        font-size: var(--fs-heading);
+        line-height: 1.3;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+    .kc-info-block p{
+        margin: 0;
+        font-size: var(--fs-option);
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    /* settings for narrower panels on smaller screens for adaptability) */
+    @media (max-width: 820px){
+        .kc-left {
+            width: 210px;
+        }
+        .kc-info{
+            width: 260px;
+        }
+    }
