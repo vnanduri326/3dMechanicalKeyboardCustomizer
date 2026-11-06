@@ -12,7 +12,7 @@ export interface Product {
   id: string;
   canonical_name: string;   // Maps to backend canonical_name
   handle: string;           // Asset slug / handle
-  type: "keyboard" | "switch" | "keycaps" | "pcb_plate"; // Modular component type
+  type: "keyboard" | "switch" | "keycaps" | "keycap" | "pcb_plate"; // API may use keycap or keycaps
   brand: string;
   product_type_raw?: string;
   min_price: number;        // Base price for cart total calculations

@@ -18,4 +18,5 @@ assets-source/downloaded/
 
 # IDE / OS
 .vscode/
+.vs/
 .DS_Store
