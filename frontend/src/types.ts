@@ -22,10 +22,13 @@ export interface Product {
   color_variants?: ColorVariant[];
 }
 
-// Active selection state for the customizer workspace & cart
-export interface CustomizerSelection {
-  case?: Product;
-  pcbPlate?: Product;
-  switch?: Product;
-  keycap?: Product;
+/** Cart slot aligned with CustomizerSelection keys (case, pcbPlate, switch, keycap). */
+export type CartSlot = 'case' | 'pcbPlate' | 'switch' | 'keycap';
+
+/** One cart row; multiple lines allowed per slot (e.g. several keycap sets). */
+export interface CartLine {
+  lineId: string;
+  product: Product;
+  slot: CartSlot;
+  quantity: number;
 }

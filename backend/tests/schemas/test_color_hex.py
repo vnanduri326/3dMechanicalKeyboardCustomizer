@@ -59,7 +59,8 @@ def test_find_variant_image_by_image_id():
     listing = _listing()
     found = find_variant_image(listing.variants[0], listing.images)
     assert found is not None
-    assert found.src.endswith("black.jpg")
+    src = found["src"] if isinstance(found, dict) else found.src
+    assert str(src).endswith("black.jpg")
 
 
 def test_find_variant_image_by_variant_ids_when_image_id_missing():

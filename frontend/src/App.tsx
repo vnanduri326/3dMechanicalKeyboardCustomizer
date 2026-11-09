@@ -1,7 +1,7 @@
 // frontend/src/App.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './styles/customizer.css';
-import { Product, CustomizerSelection } from './types';
+import { Product, CartLine } from './types';
 import { fetchProducts } from './services/api';
 import { CATEGORIES, CategoryKey } from './categories';
 import { FilterPanel } from './components/FilterPanel';
@@ -9,12 +9,23 @@ import { CartPanel } from './components/CartPanel.tsx';
 import { LeftPanel, LeftMode } from './components/LeftPanel.tsx';
 import { CarouselRow } from './components/CarouselRow.tsx';
 import { InfoPanel } from './components/InfoPanel.tsx';
+import { BrowseModal } from './components/BrowseModal.tsx';
 import { InfoIcon } from './icons.tsx';
+import {
+  CATEGORY_TO_SLOT,
+  cartLineCount,
+  mergeCartLine,
+  applySlotSelection,
+} from './cartUtils';
 
-// helpers for per-row data
 type ByCat<T> = Record<CategoryKey, T>;
 const emptyLists = (): ByCat<Product[]> => ({ keycap: [], switch: [], pcb: [], case: [] });
 const zeroes = (): ByCat<number> => ({ keycap: 0, switch: 0, pcb: 0, case: 0 });
+
+function primaryProductForSlot(lines: CartLine[], slot: CartLine['slot']): Product | undefined {
+  const rows = lines.filter((l) => l.slot === slot);
+  return rows[0]?.product;
+}
 
 export default function App() {
   const [productsByCat, setProductsByCat] = useState<ByCat<Product[]>>(emptyLists);
@@ -22,10 +33,11 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selection, setSelection] = useState<CustomizerSelection>({});
+  const [cartLines, setCartLines] = useState<CartLine[]>([]);
   const [leftMode, setLeftMode] = useState<LeftMode>('filters');
   const [leftOpen, setLeftOpen] = useState(true);
   const [infoOpen, setInfoOpen] = useState(true);
+  const [browseKey, setBrowseKey] = useState<CategoryKey | null>(null);
 
   useEffect(() => {
     Promise.all(CATEGORIES.map((c) => fetchProducts(c.type, selectedTags, searchTerm)))
@@ -47,17 +59,18 @@ export default function App() {
   };
 
   const handleSelectProduct = (product: Product) => {
-    setSelection((prev) => ({
-      ...prev,
-      [product.type === 'keyboard'
-        ? 'case'
-        : product.type === 'pcb_plate'
-          ? 'pcb'
-          : product.type === 'keycaps' || product.type === 'keycap'
-            ? 'keycap'
-            : product.type]: product,
-    }));
+    setCartLines((prev) => mergeCartLine(prev, product));
   };
+
+  const handleRemoveLine = useCallback((lineId: string) => {
+    setCartLines((prev) => prev.filter((l) => l.lineId !== lineId));
+  }, []);
+
+  const handleBrowseApply = useCallback((categoryKey: CategoryKey, selectedIds: Set<string>) => {
+    const slot = CATEGORY_TO_SLOT[categoryKey];
+    const products = productsByCat[categoryKey];
+    setCartLines((lines) => applySlotSelection(lines, slot, products, selectedIds));
+  }, [productsByCat]);
 
   const step = (key: CategoryKey, dir: 1 | -1) => {
     const n = productsByCat[key].length;
@@ -67,11 +80,25 @@ export default function App() {
   };
 
   const visible = CATEGORIES.filter((c) => selectedType === 'all' || c.type === selectedType);
-  const focused = Object.fromEntries(
-    CATEGORIES.map((c) => [c.key, productsByCat[c.key][centered[c.key]]])
-  ) as ByCat<Product | undefined>;
 
-  const cartCount = Object.values(selection).filter(Boolean).length;
+  const focused = useMemo(
+    () =>
+      ({
+        keycap: primaryProductForSlot(cartLines, 'keycap'),
+        switch: primaryProductForSlot(cartLines, 'switch'),
+        pcb: primaryProductForSlot(cartLines, 'pcbPlate'),
+        case: primaryProductForSlot(cartLines, 'case'),
+      }) as ByCat<Product | undefined>,
+    [cartLines]
+  );
+
+  const selectionIdByCategory = useMemo(() => {
+    return Object.fromEntries(
+      CATEGORIES.map((c) => [c.key, primaryProductForSlot(cartLines, CATEGORY_TO_SLOT[c.key])?.id])
+    ) as ByCat<string | undefined>;
+  }, [cartLines]);
+
+  const cartCount = cartLineCount(cartLines);
 
   const totalProductsLoaded = CATEGORIES.reduce((acc, c) => acc + productsByCat[c.key].length, 0);
 
@@ -82,6 +109,8 @@ export default function App() {
       : matchMedia('(prefers-color-scheme: dark)').matches;
     root.dataset.theme = dark ? 'light' : 'dark';
   };
+
+  const browseCategory = browseKey ? CATEGORIES.find((c) => c.key === browseKey) : null;
 
   return (
     <div className="kc-app">
@@ -104,7 +133,7 @@ export default function App() {
             onTagToggle={handleTagToggle}
           />
         }
-        cart={<CartPanel selection={selection} />}
+        cart={<CartPanel lines={cartLines} onRemoveLine={handleRemoveLine} />}
       />
       <main className="kc-mid">
         {totalProductsLoaded === 0 && (
@@ -119,9 +148,11 @@ export default function App() {
             category={c}
             products={productsByCat[c.key]}
             index={centered[c.key]}
-            selectedId={selection[c.selKey]?.id}
+            selectedId={selectionIdByCategory[c.key]}
+            browseActive={browseKey === c.key}
             onStep={(dir) => step(c.key, dir)}
             onSelect={handleSelectProduct}
+            onBrowseOpen={() => setBrowseKey((prev) => (prev === c.key ? null : c.key))}
           />
         ))}
         <button type="button" className="kc-theme-btn" onClick={toggleTheme}>
@@ -139,6 +170,17 @@ export default function App() {
         )}
       </main>
       {infoOpen && <InfoPanel focused={focused} onClose={() => setInfoOpen(false)} />}
+      {browseCategory && (
+        <BrowseModal
+          key={browseCategory.key}
+          title={`Browse ${browseCategory.label}`}
+          products={productsByCat[browseCategory.key]}
+          slot={CATEGORY_TO_SLOT[browseCategory.key]}
+          cartLines={cartLines}
+          onClose={() => setBrowseKey(null)}
+          onApply={(ids) => handleBrowseApply(browseCategory.key, ids)}
+        />
+      )}
     </div>
   );
 }
