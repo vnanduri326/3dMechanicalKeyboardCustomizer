@@ -1,31 +1,51 @@
 // frontend/src/types.ts
 
 export interface ColorVariant {
-  colorName: string;
-  colorHex: string;
+  color_name: string;
+  color_hex?: string;
+  plate_material?: string;
   price: number;
   sku: string;
-  inStock: boolean;
+  in_stock: boolean;
+  options?: Record<string, string>;
 }
 
 export interface Product {
   id: string;
   canonical_name: string;   // Maps to backend canonical_name
-  handle: string;           // Asset slug / handle
-  type: "keyboard" | "switch" | "keycaps" | "pcb_plate"; // Modular component type
+  handle?: string;
+  type: "keyboard" | "switch" | "keycap" | "keycaps" | "pcb_plate" | "other";
   brand: string;
   product_type_raw?: string;
-  min_price: number;        // Base price for cart total calculations
-  tags: string[];           // Filter specs (e.g. "feel:linear", "layout:75%")
+  min_price?: number | null;
+  tags: string[];
   image_url?: string;
   source_url?: string;
   color_variants?: ColorVariant[];
 }
 
-// Active selection state for the customizer workspace & cart
-export interface CustomizerSelection {
-  case?: Product;
+export interface PreferenceSelection {
+  keyboardSize?: string;
+  switch?: string;
+  keycapProfile?: string;
   pcbPlate?: Product;
-  switch?: Product;
-  keycap?: Product;
+}
+
+export interface RecommendationPreferences {
+  keycap: string;
+  switch: string;
+  plate: string;
+  size: string;
+}
+
+export interface RecommendationOptions {
+  keycap: string[];
+  switch: string[];
+  plate: string[];
+  size: string[];
+}
+
+export interface KeyboardRecommendation extends Product {
+  score: number;
+  matching_preferences: string[];
 }

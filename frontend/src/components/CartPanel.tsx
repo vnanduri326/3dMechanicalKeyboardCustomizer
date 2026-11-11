@@ -2,33 +2,37 @@
 // shipping/taxes/total are placeholders for now but subtotal is computed
 
 import React from 'react';
-import {CustomizerSelection} from '../types';
+import {PreferenceSelection} from '../types';
 
-export const CartPanel: React.FC<{selection: CustomizerSelection}> = ({selection}) =>{
-    const items = Object.values(selection).filter(Boolean);
-    const subtotal = items.reduce((sum, p) => sum + (p?.min_price ?? 0), 0);
+const labels: Record<'keyboardSize' | 'switch' | 'keycapProfile', string> = {
+    keyboardSize: 'Keyboard size',
+    switch: 'Switch type',
+    keycapProfile: 'Keycap profile',
+};
+
+export const CartPanel: React.FC<{selection: PreferenceSelection}> = ({selection}) =>{
+    const items = Object.entries(selection).filter(
+        (entry): entry is ['keyboardSize' | 'switch' | 'keycapProfile', string] =>
+            entry[0] !== 'pcbPlate' && Boolean(entry[1])
+    );
     return (
         <>
             <div className="kc-cart-items">
-                {items.map((p) => p && (
-                    <div className="kc-cart-item" key={p.id}>
+                {items.map(([key, value]) => (
+                    <div className="kc-cart-item" key={key}>
                         <span className="kc-ph kc-ph-thumb" />
-                        <span >{p.canonical_name}</span>
-                        <span className="kc-price">${p.min_price}</span>
+                        <span>{labels[key]}: {value}</span>
                     </div>
                 ))}
-            </div>
-            <div className="kc-totals">
-                <div>
-                    <span>Subtotal:</span><span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div>
-                    <span>Taxes:</span><span>$##.##</span>
-                </div>
-                <div>
-                    <span>Shipping:</span><span>$##.##</span>
-                </div>
-                <div className="kc-total"><span>Total:</span><span>$###.##</span></div>
+                {selection.pcbPlate && (
+                    <div className="kc-cart-item" key={selection.pcbPlate.id}>
+                        <span className="kc-ph kc-ph-thumb" />
+                        <span>PCB/Plate: {selection.pcbPlate.canonical_name}</span>
+                        {selection.pcbPlate.min_price != null && (
+                            <span className="kc-price">${selection.pcbPlate.min_price}</span>
+                        )}
+                    </div>
+                )}
             </div>
         </>
     );

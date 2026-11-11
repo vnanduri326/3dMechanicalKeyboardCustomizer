@@ -1,71 +1,100 @@
 // frontend/src/App.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './styles/customizer.css';
-import { Product, CustomizerSelection } from './types';
-import { fetchProducts } from './services/api';
-import { CATEGORIES, CategoryKey} from './categories.ts';
+import {
+  KeyboardRecommendation,
+  Product,
+  PreferenceSelection,
+  RecommendationPreferences,
+} from './types';
+import { fetchProducts, fetchRecommendations } from './services/api';
+import { PLATE_CATEGORY, PREFERENCE_CATEGORIES, PreferenceCategoryKey} from './categories.ts';
 import { FilterPanel } from './components/FilterPanel';
 import {CartPanel} from './components/CartPanel.tsx';
 import {LeftPanel, LeftMode} from './components/LeftPanel.tsx';
-import {CarouselRow} from './components/CarouselRow.tsx';
+import {PreferenceCarouselRow} from './components/PreferenceCarouselRow';
+import {CarouselRow} from './components/CarouselRow';
 import {InfoPanel} from './components/InfoPanel.tsx';
 import {InfoIcon} from './icons.tsx';
 
-// helpers for per-row data
-type ByCat<T> = Record<CategoryKey, T>;
-const emptyLists = (): ByCat<Product[]> => ({keycap: [], switch: [], pcb: [], case: []});
-const zeroes = (): ByCat<number> => ({keycap: 0, switch: 0, pcb: 0, case: 0});
+type ByCategory<T> = Record<PreferenceCategoryKey, T>;
+const zeroes = (): ByCategory<number> => ({size: 0, switch: 0, keycap: 0});
+const emptyPreferences = (): RecommendationPreferences => ({
+  keycap: '',
+  switch: '',
+  plate: '',
+  size: '',
+});
 
 export default function App() {
-  const [productsByCat, setProductsByCat] = useState<ByCat<Product[]>>(emptyLists);
-  const [centered, setCentered] = useState<ByCat<number>>(zeroes);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selection, setSelection] = useState<CustomizerSelection>({});
+  const [centered, setCentered] = useState<ByCategory<number>>(zeroes);
+  const [plates, setPlates] = useState<Product[]>([]);
+  const [plateIndex, setPlateIndex] = useState(0);
+  const [plateError, setPlateError] = useState('');
+  const [selection, setSelection] = useState<PreferenceSelection>({});
   const [leftMode, setLeftMode] = useState<LeftMode>('filters');
   const [leftOpen, setLeftOpen] = useState(true);
   const [infoOpen, setInfoOpen] = useState(true);
+  const [preferences, setPreferences] = useState<RecommendationPreferences>(emptyPreferences);
+  const [recommendations, setRecommendations] = useState<KeyboardRecommendation[] | null>(null);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationError, setRecommendationError] = useState('');
 
   useEffect(() => {
-    Promise.all(CATEGORIES.map((c)=> fetchProducts(c.type, selectedTags, searchTerm)))
-    .then((lists) => {
-      const next = emptyLists();
-      CATEGORIES.forEach((c, i) => {next[c.key] = lists[i];});
-      setProductsByCat(next);
-      setCentered(zeroes());
-    })
-     .catch((err) => console.error('Error loading products:', err));
-  }, [selectedTags, searchTerm]);
-     
-  const handleTagToggle = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
-  };
+    fetchProducts('pcb_plate')
+      .then(setPlates)
+      .catch((error: unknown) => {
+        setPlateError(error instanceof Error ? error.message : 'Failed to load PCB/plate products');
+      });
+  }, []);
 
-  const handleSelectProduct = (product: Product) => {
-    setSelection((prev) => ({
-      ...prev,
-      [product.type === 'keyboard' ? 'case' : product.type === 'pcb_plate' ? 'pcb' : product.type === 'keycaps' ? 'keycap' : product.type]: product,
+  const setPreference = (category: PreferenceCategoryKey, value: string) => {
+    const preferenceField = category === 'keycap' ? 'keycap' : category;
+    setPreferences((current) => ({ ...current, [preferenceField]: value }));
+    setSelection((current) => ({
+      ...current,
+      [category === 'size' ? 'keyboardSize' : category === 'keycap' ? 'keycapProfile' : 'switch']: value,
     }));
+    setRecommendations(null);
+    setRecommendationError('');
   };
 
-  // arrow buttons move the centered item in a row
-  const step = (key: CategoryKey, dir: 1 | -1) => {
-    const n = productsByCat[key].length;
-    if (n){
-      setCentered((c) => ({ ...c, [key]: (c[key] + dir + n) % n}));
+  const handleRecommend = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setRecommendationsLoading(true);
+    setRecommendationError('');
+    try {
+      setRecommendations(await fetchRecommendations(preferences));
+    } catch (error) {
+      setRecommendationError(error instanceof Error ? error.message : 'Failed to recommend keyboards');
+    } finally {
+      setRecommendationsLoading(false);
     }
   };
 
-  // rows shown now only shows that row; passes the centered product to info
-  const visible = CATEGORIES.filter((c) => selectedType === 'all' || c.type === selectedType);
-  const focused = Object.fromEntries(
-    CATEGORIES.map((c) => [c.key, productsByCat[c.key][centered[c.key]]])
-  ) as ByCat<Product | undefined>;
+  const step = (category: PreferenceCategoryKey, direction: 1 | -1) => {
+    const count = PREFERENCE_CATEGORIES.find((item) => item.key === category)!.options.length;
+    setCentered((current) => ({
+      ...current,
+      [category]: (current[category] + direction + count) % count,
+    }));
+  };
 
-  // number of items in cart shown in cart's circle thing
+  const selectPlate = (product: Product) => {
+    const material = product.color_variants?.find((variant) => variant.plate_material)?.plate_material
+      ?? product.canonical_name;
+    setSelection((current) => ({ ...current, pcbPlate: product }));
+    setPreferences((current) => ({ ...current, plate: material }));
+    setRecommendations(null);
+    setRecommendationError('');
+  };
+
+  const stepPlate = (direction: 1 | -1) => {
+    if (plates.length) {
+      setPlateIndex((current) => (current + direction + plates.length) % plates.length);
+    }
+  };
+
   const cartCount = Object.values(selection).filter(Boolean).length;
 
   // Light/dark preview toggle sets theme 
@@ -79,26 +108,56 @@ export default function App() {
     <div className="kc-app">
       <LeftPanel mode ={leftMode} open={leftOpen} cartCount={cartCount} onMode={(m) => {setLeftMode(m); setLeftOpen(true);}} onClose={() => setLeftOpen(false)} filters={
         <FilterPanel
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          selectedType={selectedType}
-          onTypeChange={setSelectedType}
-          selectedTags={selectedTags}
-          onTagToggle={handleTagToggle}
+          preferences={preferences}
+          onRecommend={handleRecommend}
+          recommendationsLoading={recommendationsLoading}
+          recommendationError={recommendationError}
         />
       }
       cart={<CartPanel selection={selection} />}
       />
       <main className="kc-mid">
-        {visible.map((c) => (
-          <CarouselRow key={c.key} category={c} products={productsByCat[c.key]} index={centered[c.key]} selectedId={selection[c.selKey]?.id} onStep={(dir) => step(c.key, dir)} onSelect={handleSelectProduct} />
+        {PREFERENCE_CATEGORIES.map((category) => (
+          <PreferenceCarouselRow
+            key={category.key}
+            category={category}
+            index={centered[category.key]}
+            selected={preferences[category.key]}
+            onStep={(direction) => step(category.key, direction)}
+            onSelect={(value) => setPreference(category.key, value)}
+            onChoose={(index) => setCentered((current) => ({ ...current, [category.key]: index }))}
+          />
         ))}
+        <CarouselRow
+          category={PLATE_CATEGORY}
+          products={plates}
+          index={plateIndex}
+          selectedId={selection.pcbPlate?.id}
+          onStep={stepPlate}
+          onSelect={selectPlate}
+        />
+        {plateError && <p className="kc-recommend-error" role="alert">{plateError}</p>}
+        {recommendations !== null && (
+          <div className="kc-recommend-status">
+            {recommendations.length
+              ? `Closest keyboard: ${recommendations[0].canonical_name} (${recommendations[0].score}% match)`
+              : 'No keyboard listings available to recommend.'}
+            <button onClick={() => setRecommendations(null)}>Clear match</button>
+          </div>
+        )}
         <button className="kc-theme-btn" onClick={toggleTheme}>Light/Dark</button>
         {!infoOpen && (
           <button className="kc-info-open" onClick={() => setInfoOpen(true)} aria-label="Open info"><InfoIcon /></button>
         )}
       </main>
-      {infoOpen && <InfoPanel focused={focused} onClose={() => setInfoOpen(false)} />}
+      {infoOpen && (
+        <InfoPanel
+          preferences={preferences}
+          plateProduct={selection.pcbPlate}
+          recommendation={recommendations?.[0]}
+          onClose={() => setInfoOpen(false)}
+        />
+      )}
     </div>
   );
 }

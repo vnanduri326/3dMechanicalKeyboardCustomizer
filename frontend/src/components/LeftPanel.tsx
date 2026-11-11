@@ -34,7 +34,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({mode, open, cartCount, onMo
     <aside className={`kc-left kc-left-${mode}`}>
         <div className="kc-panel-head">
             {mode === 'filters' ? <FilterIcon halo /> : <CartIcon halo />}
-            <h2 className="kc-px">{mode === 'filters' ? 'Filters' : 'Your Cart'}</h2>
+            <h2 className="kc-px">{mode === 'filters' ? 'Filters' : 'Your Choices'}</h2>
             <button className="kc-x" onClick={onClose} aria-label="Close panel"><CloseIcon /></button>
         </div>
         {mode === 'filters' ? filters : cart}
