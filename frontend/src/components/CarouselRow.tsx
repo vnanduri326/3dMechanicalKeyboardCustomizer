@@ -3,6 +3,7 @@ import React from 'react';
 import { Product } from '../types';
 import { Category } from '../categories';
 import { ArrowIcon } from '../icons';
+import ModelViewer from './ModelViewer';
 
 interface CarouselRowProps {
   category: Category;
@@ -41,6 +42,7 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({
   const n = products.length;
   const at = (i: number) => (n ? products[(i + n) % n] : undefined);
   const center = at(index);
+  const showModel = category.key === 'case';
   return (
     <div className="kc-row">
       <button
@@ -73,7 +75,7 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({
           disabled={!center}
           aria-label={center ? `Select ${center.canonical_name}` : `No ${category.label}`}
         >
-          <Img p={center} className="kc-fill" />
+          {showModel ? <ModelViewer /> : <Img p={center} className="kc-fill" />}
         </button>
         {category.slides && <Img p={at(index + 1)} className="kc-side kc-side-r" />}
       </div>
