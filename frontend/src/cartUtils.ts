@@ -10,11 +10,17 @@ export function newLineId(): string {
   return `ln-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
+function productText(p: Product): string {
+  return [p.canonical_name, p.brand, p.product_type_raw, ...p.tags].join(' ').toLowerCase();
+}
+
 export function productToSlot(product: Product): CartSlot {
   if (product.type === 'keyboard') return 'case';
   if (product.type === 'pcb_plate') return 'pcbPlate';
   if (product.type === 'keycaps' || product.type === 'keycap') return 'keycap';
-  return 'switch';
+  if (product.type === 'switch') return 'switch';
+  if (product.type === 'other' && /case/i.test(productText(product))) return 'case';
+  return 'keycap';
 }
 
 /** Maps carousel row key to cart slot (same as productToSlot for those types). */

@@ -43,7 +43,7 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({
   const n = products.length;
   const at = (i: number) => (n ? products[(i + n) % n] : undefined);
   const center = at(index);
-  const showModel = category.type === 'keyboard';
+  const showModel = category.key === 'case';
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
@@ -70,8 +70,8 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({
         aria-label={`Browse all ${category.label}`}
         aria-expanded={browseActive}
         aria-pressed={browseActive}
-        onClick={onBrowseOpen}
-        disabled={!onBrowseOpen}
+        onClick={() => onBrowseOpen?.()}
+        disabled={!onBrowseOpen || n === 0}
       >
         {Array.from({ length: 9 }, (_, i) => (
           <i key={i} />

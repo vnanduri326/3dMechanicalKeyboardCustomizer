@@ -30,14 +30,18 @@ export const PREFERENCE_CATEGORIES = [
     },
 ] as const;
 
-export const PLATE_CATEGORY = {
-    key: 'pcb',
-    label: 'PCB/Plate',
-    type: 'pcb_plate',
-    selKey: 'pcbPlate',
-    slides: false,
-} as const;
+/** API-backed product carousels (browse grid + cart lines). */
+export const PRODUCT_CATEGORIES = [
+    { key: 'keycap', label: 'Keycaps', type: 'keycaps', selKey: 'keycap', slides: true },
+    { key: 'switch', label: 'Switches', type: 'switch', selKey: 'switch', slides: true },
+    { key: 'pcb', label: 'PCB/Plate', type: 'pcb_plate', selKey: 'pcbPlate', slides: false },
+    { key: 'case', label: 'Case', type: 'keyboard', selKey: 'case', slides: false },
+] as const;
+
+export const PLATE_CATEGORY = PRODUCT_CATEGORIES[2];
 
 export type PreferenceCategory = (typeof PREFERENCE_CATEGORIES)[number];
 export type PreferenceCategoryKey = PreferenceCategory['key'];
-export type Category = typeof PLATE_CATEGORY;
+export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+export type CategoryKey = ProductCategory['key'];
+export type Category = ProductCategory;

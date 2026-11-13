@@ -385,6 +385,20 @@
         display: grid;
         place-items: center;
     }
+    .kc-cart-section{
+        font-size: 12px;
+        font-weight: 700;
+        margin: 12px 0 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        opacity: 0.85;
+    }
+    .kc-mid-section{
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
     .kc-cart-empty{
         font-size: var(--fs-option);
         opacity: 0.8;
