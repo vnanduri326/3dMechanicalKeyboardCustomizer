@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { PreferenceCategory } from '../categories';
 import { ArrowIcon } from '../icons';
 
@@ -6,20 +6,25 @@ interface PreferenceCarouselRowProps {
     category: PreferenceCategory;
     index: number;
     selected?: string;
+    gridOpen: boolean;
     onStep: (direction: 1 | -1) => void;
     onSelect: (value: string) => void;
     onChoose: (index: number) => void;
+    onGridToggle: () => void;
+    onGridClose: () => void;
 }
 
 export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
     category,
     index,
     selected,
+    gridOpen,
     onStep,
     onSelect,
     onChoose,
+    onGridToggle,
+    onGridClose,
 }) => {
-    const [gridOpen, setGridOpen] = useState(false);
     const lastWheelStep = useRef<number | null>(null);
     const touchStartX = useRef<number | null>(null);
     const option = category.options[index];
@@ -40,16 +45,18 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
     };
 
     return (
-        <div className="kc-row">
+        <div className={`kc-row ${gridOpen ? 'kc-row--grid-open' : ''}`}>
             <button
-                className="kc-grid-btn"
+                type="button"
+                className={`kc-grid-btn ${gridOpen ? 'kc-grid-btn--active' : ''}`}
                 aria-label={`Browse all ${category.label} options`}
                 aria-expanded={gridOpen}
-                onClick={() => setGridOpen((open) => !open)}
+                onClick={onGridToggle}
             >
                 {Array.from({ length: 9 }, (_, i) => <i key={i} />)}
             </button>
             <button
+                type="button"
                 className="kc-arrow"
                 onClick={() => onStep(-1)}
                 aria-label={`Previous ${category.label}`}
@@ -66,6 +73,7 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
             >
                 <span className="kc-choice-side">{previous}</span>
                 <button
+                    type="button"
                     className={`kc-choice-main ${selected === option ? 'kc-choice-picked' : ''}`}
                     onClick={() => onSelect(option)}
                     aria-pressed={selected === option}
@@ -75,6 +83,7 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
                 <span className="kc-choice-side">{next}</span>
             </div>
             <button
+                type="button"
                 className="kc-arrow"
                 onClick={() => onStep(1)}
                 aria-label={`Next ${category.label}`}
@@ -93,7 +102,7 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
                                 onClick={() => {
                                     onSelect(value);
                                     onChoose(optionIndex);
-                                    setGridOpen(false);
+                                    onGridClose();
                                 }}
                             >
                                 {value}

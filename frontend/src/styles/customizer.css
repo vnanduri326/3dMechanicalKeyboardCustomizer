@@ -396,7 +396,7 @@
     .kc-mid-section{
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
         width: 100%;
     }
     .kc-cart-empty{
@@ -473,10 +473,18 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        justify-content: space-evenly;
-        padding: 20px 28px;
+        justify-content: flex-start;
+        gap: 14px;
+        padding: 16px 28px 20px;
         overflow-y: auto;
         background: var(--mid);
+    }
+    .kc-mid-toolbar{
+        display: flex;
+        justify-content: flex-end;
+        flex: none;
+        width: 100%;
+        padding-bottom: 4px;
     }
     .kc-empty-msg{
         font-family: Comfortaa, system-ui, sans-serif;
@@ -497,6 +505,11 @@
         align-items: center;
         gap: 14px;
         position: relative;
+        flex-wrap: nowrap;
+    }
+    .kc-row.kc-row--grid-open{
+        flex-wrap: wrap;
+        z-index: 6;
     }
     .kc-choice-track{
         flex: 1;
@@ -509,7 +522,7 @@
     .kc-choice-side{
         flex: 1;
         overflow: hidden;
-        color: var(--ph-line);
+        color: color-mix(in srgb, var(--text) 55%, transparent);
         font-size: 11px;
         text-align: center;
         text-overflow: ellipsis;
@@ -540,6 +553,15 @@
         border-radius: 8px;
         background: var(--field);
         box-shadow: 0 4px 14px #0002;
+    }
+    .kc-row.kc-row--grid-open .kc-choice-grid{
+        position: relative;
+        top: auto;
+        left: auto;
+        z-index: 1;
+        flex: 1 1 100%;
+        width: 100%;
+        margin-top: 4px;
     }
     .kc-choice-grid strong{
         display: block;
@@ -843,15 +865,16 @@
     .kc-side-r{
         clip-path: polygon(0 0, 100% 14%, 100% 86%, 0 100%);
     }
-    .kc-theme-btn, .kn-info-open{
-        position: absolute;
-        top: 10px;
-        right: 12px;
+    .kc-theme-btn{
+        position: static;
         border: 1px solid var(--edge);
         background: var(--field);
+        color: var(--text);
         border-radius: 999px;
-        padding: 5px 12px;
+        padding: 6px 14px;
         font-size: 12px;
+        font-weight: 700;
+        flex: none;
     }
     .kc-info-open{
         top: auto;

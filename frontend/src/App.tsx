@@ -97,6 +97,7 @@ export default function App() {
   const [selection, setSelection] = useState<PreferenceSelection>({});
   const [cartLines, setCartLines] = useState<CartLine[]>([]);
   const [browseKey, setBrowseKey] = useState<CategoryKey | null>(null);
+  const [openPreferenceGrid, setOpenPreferenceGrid] = useState<PreferenceCategoryKey | null>(null);
   const [leftMode, setLeftMode] = useState<LeftMode>('filters');
   const [leftOpen, setLeftOpen] = useState(true);
   const [infoOpen, setInfoOpen] = useState(true);
@@ -273,12 +274,20 @@ export default function App() {
     (selection.switch ? 1 : 0);
   const cartCount = prefCartCount + cartLineCount(cartLines);
 
-  const toggleTheme = () => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const root = document.documentElement;
-    const dark = root.dataset.theme
-      ? root.dataset.theme === 'dark'
-      : matchMedia('(prefers-color-scheme: dark)').matches;
-    root.dataset.theme = dark ? 'light' : 'dark';
+    if (root.dataset.theme === 'dark' || root.dataset.theme === 'light') {
+      return root.dataset.theme;
+    }
+    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  const toggleTheme = () => {
+    setTheme((current) => {
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      return next;
+    });
   };
 
   const browseCategory = browseKey ? PRODUCT_CATEGORIES.find((c) => c.key === browseKey) : null;
@@ -314,6 +323,11 @@ export default function App() {
         cart={<CartPanel selection={selection} lines={cartLines} onRemoveLine={handleRemoveLine} />}
       />
       <main className="kc-mid">
+        <div className="kc-mid-toolbar">
+          <button type="button" className="kc-theme-btn" onClick={toggleTheme}>
+            {theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
+          </button>
+        </div>
         <section className="kc-mid-section" aria-label="Build preferences">
           {PREFERENCE_CATEGORIES.map((category) => (
             <PreferenceCarouselRow
@@ -321,9 +335,14 @@ export default function App() {
               category={category}
               index={prefCentered[category.key]}
               selected={preferences[category.key]}
+              gridOpen={openPreferenceGrid === category.key}
               onStep={(direction) => stepPreference(category.key, direction)}
               onSelect={(value) => setPreference(category.key, value)}
               onChoose={(index) => setPrefCentered((current) => ({ ...current, [category.key]: index }))}
+              onGridToggle={() =>
+                setOpenPreferenceGrid((current) => (current === category.key ? null : category.key))
+              }
+              onGridClose={() => setOpenPreferenceGrid(null)}
             />
           ))}
         </section>
@@ -338,7 +357,10 @@ export default function App() {
               browseActive={browseKey === category.key}
               onStep={(dir) => stepProduct(category.key, dir)}
               onSelect={(p) => handleSelectProduct(category.key, p)}
-              onBrowseOpen={() => setBrowseKey((prev) => (prev === category.key ? null : category.key))}
+              onBrowseOpen={() => {
+                setOpenPreferenceGrid(null);
+                setBrowseKey((prev) => (prev === category.key ? null : category.key));
+              }}
             />
           ))}
         </section>
@@ -357,9 +379,6 @@ export default function App() {
             </button>
           </div>
         )}
-        <button type="button" className="kc-theme-btn" onClick={toggleTheme}>
-          Light/Dark
-        </button>
         {!infoOpen && (
           <button
             type="button"
