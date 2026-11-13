@@ -3,6 +3,7 @@ import React from 'react';
 import {Product} from '../types';
 import {Category} from '../categories';
 import {ArrowIcon} from '../icons';
+import ModelViewer from "./ModelViewer";
 
 interface CarouselRowProps{
     category: Category;
@@ -35,7 +36,7 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({category, products, ind
                 {/* clicking center image adds it to cart - NEEDS REMOVAL FROM CART FUNCTIONALITY */}
                 {category.slides && <Img p={at(index - 1)} className="kc-side kc-side-l" />}
                 <button className={`kc-main-btn ${category.slides ? 'kc-main' : 'kc-wide'} ${center && center.id === selectedId ? 'kc-picked' : ''}`} onClick={() => center && onSelect(center)} disabled={!center} aria-label={center ? `Select ${center.canonical_name}` : `No ${category.label}`}>
-                    <Img p={center} className="kc-fill" />
+                    <ModelViewer />
                 </button>
                 {category.slides && <Img p={at(index + 1)} className="kc-side kc-side-r" />}
             </div>
