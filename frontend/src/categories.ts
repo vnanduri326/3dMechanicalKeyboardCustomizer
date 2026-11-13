@@ -1,10 +1,43 @@
-// defines the four selection rows as keycaps, switches, pcb/plates, and cases
-export const CATEGORIES = [
-    { key: 'keycap', label: 'Keycap', type: 'keycaps', selKey: 'keycap', slides: true},
-    { key: 'switch', label: 'Switch', type: 'switch', selKey: 'switch', slides: true},
-    { key: 'pcb', label: 'PCB/Plate', type: 'pcb_plate', selKey: 'pcbPlate', slides: false},
-    { key: 'case', label: 'Case', type: 'keyboard', selKey: 'case', slides: false},
+export const PREFERENCE_CATEGORIES = [
+    {
+        key: 'keycap',
+        label: 'Keycap Profile',
+        options: [
+            'Cherry Profile',
+            'OEM Profile',
+            'Leopold Profile',
+            'SA Profile',
+            'Varmilo Profile',
+            'Cubic Profile',
+            'Low Profile',
+        ],
+    },
+    {
+        key: 'switch',
+        label: 'Switch Type',
+        options: [
+            'Linear Switches',
+            'Tactile Switches',
+            'Clicky Switches',
+            'HE / Magnetic Switches',
+            'Silent Switches',
+        ],
+    },
+    {
+        key: 'size',
+        label: 'Keyboard Size',
+        options: ['Full-size', 'Tenkeyless', '75%', '60%', 'Low profile'],
+    },
 ] as const;
 
-export type Category = (typeof CATEGORIES)[number];
-export type CategoryKey = Category['key'];
+export const PLATE_CATEGORY = {
+    key: 'pcb',
+    label: 'PCB/Plate',
+    type: 'pcb_plate',
+    selKey: 'pcbPlate',
+    slides: false,
+} as const;
+
+export type PreferenceCategory = (typeof PREFERENCE_CATEGORIES)[number];
+export type PreferenceCategoryKey = PreferenceCategory['key'];
+export type Category = typeof PLATE_CATEGORY;

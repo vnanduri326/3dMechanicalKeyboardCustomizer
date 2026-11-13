@@ -1,28 +1,67 @@
 // frontend/src/types.ts
 
 export interface ColorVariant {
-  colorName: string;
-  colorHex: string;
+  color_name: string;
+  color_hex?: string;
+  plate_material?: string;
   price: number;
   sku: string;
-  inStock: boolean;
+  in_stock: boolean;
+  options?: Record<string, string>;
 }
 
 export interface Product {
   id: string;
-  canonical_name: string;   // Maps to backend canonical_name
-  handle: string;           // Asset slug / handle
-  type: "keyboard" | "switch" | "keycaps" | "keycap" | "pcb_plate"; // API may use keycap or keycaps
+  canonical_name: string;
+  handle?: string;
+  type: 'keyboard' | 'switch' | 'keycap' | 'keycaps' | 'pcb_plate' | 'other';
   brand: string;
   product_type_raw?: string;
-  min_price: number;        // Base price for cart total calculations
-  tags: string[];           // Filter specs (e.g. "feel:linear", "layout:75%")
+  min_price?: number | null;
+  tags: string[];
   image_url?: string;
   source_url?: string;
   color_variants?: ColorVariant[];
 }
 
-/** Cart slot aligned with CustomizerSelection keys (case, pcbPlate, switch, keycap). */
+export interface PreferenceSelection {
+  keyboardSize?: string;
+  switch?: string;
+  keycapProfile?: string;
+  pcbPlate?: Product;
+}
+
+export interface RecommendationPreferences {
+  keycap: string;
+  switch: string;
+  plate: string;
+  size: string;
+}
+
+export interface RecommendationOptions {
+  keycap: string[];
+  switch: string[];
+  plate: string[];
+  size: string[];
+}
+
+export interface CatalogFilters {
+  search: string;
+  maxPrice: number;
+  keycaps: boolean;
+  oemProfile: boolean;
+  switches: boolean;
+  pcbPlates: boolean;
+  cases: boolean;
+}
+
+export interface PartRecommendation extends Product {
+  category: 'keycap' | 'switch' | 'pcb_plate';
+  score: number;
+  matching_preferences: string[];
+}
+
+/** Cart slot aligned with builder slots (case, pcbPlate, switch, keycap). */
 export type CartSlot = 'case' | 'pcbPlate' | 'switch' | 'keycap';
 
 /** One cart row; multiple lines allowed per slot (e.g. several keycap sets). */

@@ -1,5 +1,5 @@
 // adds middle-section row, with grid button, left/right arrows, and product images
-import React from 'react';
+import React, { useRef } from 'react';
 import { Product } from '../types';
 import { Category } from '../categories';
 import { ArrowIcon } from '../icons';
@@ -14,10 +14,9 @@ interface CarouselRowProps {
   browseActive?: boolean;
   onStep: (dir: 1 | -1) => void;
   onSelect: (p: Product) => void;
-  onBrowseOpen: () => void;
+  onBrowseOpen?: () => void;
 }
 
-// product image, or X-ed box if no image;
 const Img: React.FC<{ p?: Product; className: string }> = ({ p, className }) =>
   p?.image_url ? (
     <img className={`kc-ph ${className}`} src={p.image_url} alt={p.canonical_name} />
@@ -39,10 +38,30 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({
   onSelect,
   onBrowseOpen,
 }) => {
+  const lastWheelStep = useRef<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
   const n = products.length;
   const at = (i: number) => (n ? products[(i + n) % n] : undefined);
   const center = at(index);
-  const showModel = category.key === 'case';
+  const showModel = category.type === 'keyboard';
+
+  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    if (Math.abs(delta) < 10 || (lastWheelStep.current !== null && event.timeStamp - lastWheelStep.current < 180)) {
+      return;
+    }
+    lastWheelStep.current = event.timeStamp;
+    onStep(delta > 0 ? 1 : -1);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    const startX = touchStartX.current;
+    const endX = event.changedTouches[0]?.clientX;
+    touchStartX.current = null;
+    if (startX === null || endX === undefined || Math.abs(endX - startX) < 40) return;
+    onStep(endX < startX ? 1 : -1);
+  };
+
   return (
     <div className="kc-row">
       <button
@@ -52,6 +71,7 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({
         aria-expanded={browseActive}
         aria-pressed={browseActive}
         onClick={onBrowseOpen}
+        disabled={!onBrowseOpen}
       >
         {Array.from({ length: 9 }, (_, i) => (
           <i key={i} />
@@ -66,7 +86,16 @@ export const CarouselRow: React.FC<CarouselRowProps> = ({
       >
         <ArrowIcon dir="left" />
       </button>
-      <div className="kc-track" role="group" aria-label={`${category.label}: ${center?.canonical_name ?? 'none'}`}>
+      <div
+        className="kc-track"
+        role="group"
+        aria-label={`${category.label}: ${center?.canonical_name ?? 'none'}`}
+        onWheel={handleWheel}
+        onTouchStart={(event) => {
+          touchStartX.current = event.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={handleTouchEnd}
+      >
         {category.slides && <Img p={at(index - 1)} className="kc-side kc-side-l" />}
         <button
           type="button"
