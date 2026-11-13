@@ -40,6 +40,7 @@ def process_and_store_handle(handle: str, source: str = "mechanicalkeyboards.com
             type=p.type,
             brand=p.brand,
             product_type_raw=p.product_type_raw,
+            description=p.description,
             color_variants=[v.model_dump() for v in p.color_variants],
             tags=p.tags,
         ))

@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ColorVariantOut(BaseModel):
@@ -10,7 +10,7 @@ class ColorVariantOut(BaseModel):
     price: float
     sku: str
     in_stock: bool = True
-    options: dict[str, str] = {}
+    options: dict[str, str] = Field(default_factory=dict)
 
 
 class ProductOut(BaseModel):
@@ -23,8 +23,8 @@ class ProductOut(BaseModel):
     min_price: Optional[float] = None
     source_url: Optional[str] = None
     image_url: Optional[str] = None
-    color_variants: list[ColorVariantOut] = []
-    tags: list[str] = []
+    color_variants: list[ColorVariantOut] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
 
 class ProductListOut(BaseModel):
@@ -32,3 +32,28 @@ class ProductListOut(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class RecommendationPreferences(BaseModel):
+    keycap: Optional[str] = None
+    switch: Optional[str] = None
+    plate: Optional[str] = None
+    size: Optional[str] = None
+
+
+class PartRecommendationOut(ProductOut):
+    category: Literal["keycap", "switch", "pcb_plate"]
+    score: int
+    matching_preferences: list[str] = Field(default_factory=list)
+
+
+class RecommendationListOut(BaseModel):
+    items: list[PartRecommendationOut]
+    total: int
+
+
+class RecommendationOptionsOut(BaseModel):
+    keycap: list[str] = Field(default_factory=list)
+    switch: list[str] = Field(default_factory=list)
+    plate: list[str] = Field(default_factory=list)
+    size: list[str] = Field(default_factory=list)

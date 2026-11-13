@@ -1,5 +1,6 @@
 from typing import Optional
 
+from pydantic import BaseModel, Field, field_validator
 
 class Variant(BaseModel):
     id: Optional[int] = None
@@ -26,7 +27,6 @@ class Image(BaseModel):
 
 class RawListing(BaseModel):
     """Validated shape of one product's raw JSON from mechanicalkeyboards.com."""
-    handle: str = ""
     title: str
     handle: Optional[str] = None
     vendor: str

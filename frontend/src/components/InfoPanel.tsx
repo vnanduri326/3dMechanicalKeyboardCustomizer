@@ -35,8 +35,8 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
             <p>{preferences.size || 'Choose a size in the carousel.'}</p>
         </section>
         <section className="kc-info-block">
-            <h3>PCB/Plate</h3>
-            <p>{plateProduct?.canonical_name ?? 'Select a PCB/plate product in the carousel.'}</p>
+            <h3>Plate</h3>
+            <p>{plateProduct?.canonical_name ?? 'Select a Plate product in the carousel.'}</p>
             {plateProduct?.min_price != null && <p>${plateProduct.min_price}</p>}
         </section>
         {recommendations.map((recommendation) => {

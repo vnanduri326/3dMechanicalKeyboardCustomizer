@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Index, Numeric, String
+from sqlalchemy import Boolean, Column, DateTime, Index, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 
 from storage.db import Base
@@ -39,6 +39,7 @@ class Product(Base):
     type = Column(String, nullable=False, index=True)
     brand = Column(String, nullable=False, index=True)
     product_type_raw = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
     color_variants = Column(JSONB, default=list)
     tags = Column(JSONB, default=list)
 

@@ -2,10 +2,19 @@ import os
 from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import String as SQLString, cast, or_
 from sqlalchemy.orm import Session
 
 from api import filters
-from api.schemas import ProductListOut, ProductOut
+from api.recommendations import get_recommendation_options, rank_part_recommendations
+from api.schemas import (
+    PartRecommendationOut,
+    ProductListOut,
+    ProductOut,
+    RecommendationListOut,
+    RecommendationOptionsOut,
+    RecommendationPreferences,
+)
 from storage.db import get_db
 from storage.models import Product
 
@@ -57,6 +66,8 @@ def list_products(
     type: Optional[str] = Query(None, description="Filter by product category (case-insensitive)"),
     brand: Optional[str] = Query(None, description="Filter by brand name (case-insensitive)"),
     max_price: Optional[float] = Query(None, ge=0, description="Filter items with min_price <= max_price"),
+    search: Optional[str] = Query(None, description="Search product names, brands, types, and tags"),
+    tags: Optional[list[str]] = Query(None, description="Require each listed product tag"),
     sort_by: Optional[str] = Query(
         "name_asc",
         description="Sort order: 'price_asc', 'price_desc', 'name_asc', or 'name_desc'",
@@ -69,11 +80,28 @@ def list_products(
 
     # Case-insensitive filtering
     if type:
-        query = query.filter(Product.type.ilike(type))
+        if type.casefold() in {"keycap", "keycaps"}:
+            query = query.filter(
+                or_(Product.type.ilike("keycap"), Product.type.ilike("keycaps"))
+            )
+        else:
+            query = query.filter(Product.type.ilike(type))
     if brand:
         query = query.filter(Product.brand.ilike(brand))
     if max_price is not None:
         query = query.filter(Product.min_price <= max_price)
+    if search and search.strip():
+        search_pattern = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Product.canonical_name.ilike(search_pattern),
+                Product.brand.ilike(search_pattern),
+                Product.product_type_raw.ilike(search_pattern),
+                cast(Product.tags, SQLString).ilike(search_pattern),
+            )
+        )
+    for tag in tags or []:
+        query = query.filter(cast(Product.tags, SQLString).ilike(f'%"{tag}"%'))
 
     # Dynamic sorting
     if sort_by == "price_asc":
@@ -90,6 +118,54 @@ def list_products(
 
     return ProductListOut(
         items=[to_out(p) for p in rows], total=total, limit=limit, offset=offset
+    )
+
+
+@app.get(
+    "/api/recommendations/options",
+    response_model=RecommendationOptionsOut,
+    tags=["Recommendations"],
+)
+def recommendation_options(db: Session = Depends(get_db)):
+    products = db.query(Product).all()
+    return get_recommendation_options(products)
+
+
+@app.post(
+    "/api/recommendations",
+    response_model=RecommendationListOut,
+    tags=["Recommendations"],
+)
+def recommend_parts(
+    preferences: RecommendationPreferences,
+    db: Session = Depends(get_db),
+):
+    if not any(
+        value and value.strip()
+        for value in (
+            preferences.keycap,
+            preferences.switch,
+            preferences.plate,
+            preferences.size,
+        )
+    ):
+        raise HTTPException(
+            status_code=422, detail="Choose at least one part preference"
+        )
+
+    products = db.query(Product).all()
+    ranked = rank_part_recommendations(products, preferences)
+    return RecommendationListOut(
+        items=[
+            PartRecommendationOut(
+                **to_out(product).model_dump(),
+                category=category,
+                score=score,
+                matching_preferences=matches,
+            )
+            for product, category, score, matches in ranked
+        ],
+        total=len(ranked),
     )
 
 

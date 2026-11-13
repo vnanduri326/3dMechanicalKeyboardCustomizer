@@ -1,3 +1,5 @@
+import html
+import re
 from typing import Optional
 
 from pydantic import BaseModel
@@ -105,6 +107,7 @@ class Product(BaseModel):
     type: str  # "keyboard" | "switch" | "keycap" | "other"
     brand: str
     product_type_raw: str
+    description: Optional[str] = None
     color_variants: list[ColorVariant] = []
     tags: list[str] = []
 
@@ -144,26 +147,40 @@ def resolve_color_hex(color_name: str) -> Optional[str]:
     return None
 
 
-def find_variant_image(variant: Variant, images: list[Image]) -> Optional[Image]:
+def _get(obj, key, default=None):
+    """Read a key from a dict, or an attribute from an object."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def find_variant_image(
+    variant: Variant | dict, images: list[Image | dict]
+) -> Optional[Image]:
     """Match a variant to its product photo by image_id, then by variant_ids."""
-    if variant.image_id is not None:
+    image_id = _get(variant, "image_id")
+    if image_id is not None:
         for image in images:
-            if image.id == variant.image_id:
-                return image
-    if variant.id is not None:
+            if _get(image, "id") == image_id:
+                return image if isinstance(image, Image) else Image(**image)
+    variant_id = _get(variant, "id")
+    if variant_id is not None:
         for image in images:
-            if variant.id in image.variant_ids:
-                return image
+            if variant_id in (_get(image, "variant_ids", []) or []):
+                return image if isinstance(image, Image) else Image(**image)
     return None
 
 
-def hex_for_variant(color_name: str, variant: Variant, images: list[Image]) -> Optional[str]:
+def hex_for_variant(
+    color_name: str, variant: Variant | dict, images: list[Image | dict]
+) -> Optional[str]:
     """Sample the variant photo when one is linked; otherwise use the exact color map."""
     if not color_name or color_name == "N/A":
         return None
     image = find_variant_image(variant, images)
-    if image is not None and image.src:
-        sampled = sample_hex_from_url(image.src)
+    image_src = _get(image, "src") if image is not None else None
+    if image_src:
+        sampled = sample_hex_from_url(image_src)
         if sampled:
             return sampled
     return resolve_color_hex(color_name)
@@ -175,16 +192,18 @@ def parse_price(raw) -> float:
     return float(cleaned)
 
 
-def _get(obj, key, default=None):
-    """Read a key from a dict, or an attribute from an object."""
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    return getattr(obj, key, default)
+def _plain_text(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+    text = html.unescape(re.sub(r"<[^>]*>", " ", value))
+    return re.sub(r"\s+", " ", text).strip() or None
 
 
 def normalize_listing(listing: RawListing) -> Product:
     lowered_type = listing.product_type.lower()
-    if "keyboard" in lowered_type:
+    if "plate" in lowered_type or "pcb" in lowered_type:
+        product_type = "pcb_plate"
+    elif "keyboard" in lowered_type:
         product_type = "keyboard"
     elif "switch" in lowered_type:
         product_type = "switch"
@@ -246,6 +265,7 @@ def normalize_listing(listing: RawListing) -> Product:
         type=product_type,
         brand=listing.vendor,
         product_type_raw=listing.product_type,
+        description=_plain_text(listing.body_html),
         min_price=min_price,
         source_url=source_url,
         image_url=image_url,
