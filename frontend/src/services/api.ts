@@ -1,5 +1,5 @@
 import {
-  KeyboardRecommendation,
+  PartRecommendation,
   Product,
   RecommendationOptions,
   RecommendationPreferences,
@@ -10,11 +10,13 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 export async function fetchProducts(
   type?: string,
   tags?: string[],
-  search?: string
+  search?: string,
+  limit = 20
 ): Promise<Product[]> {
   const params = new URLSearchParams();
   if (type) params.append('type', type);
   if (search) params.append('search', search);
+  params.append('limit', String(limit));
   if (tags) {
     tags.forEach((tag) => params.append('tags', tag));
   }
@@ -38,7 +40,7 @@ export async function fetchRecommendationOptions(): Promise<RecommendationOption
 
 export async function fetchRecommendations(
   preferences: RecommendationPreferences
-): Promise<KeyboardRecommendation[]> {
+): Promise<PartRecommendation[]> {
   const response = await fetch(`${API_BASE_URL}/api/recommendations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -46,7 +48,7 @@ export async function fetchRecommendations(
   });
   if (!response.ok) {
     const body = await response.json().catch(() => undefined);
-    throw new Error(body?.detail || 'Failed to recommend keyboards');
+    throw new Error(body?.detail || 'Failed to recommend parts');
   }
 
   const data = await response.json();

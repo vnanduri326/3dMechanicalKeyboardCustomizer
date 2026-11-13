@@ -45,7 +45,18 @@ export interface RecommendationOptions {
   size: string[];
 }
 
-export interface KeyboardRecommendation extends Product {
+export interface CatalogFilters {
+  search: string;
+  maxPrice: number;
+  keycaps: boolean;
+  oemProfile: boolean;
+  switches: boolean;
+  pcbPlates: boolean;
+  cases: boolean;
+}
+
+export interface PartRecommendation extends Product {
+  category: 'keycap' | 'switch' | 'pcb_plate';
   score: number;
   matching_preferences: string[];
 }

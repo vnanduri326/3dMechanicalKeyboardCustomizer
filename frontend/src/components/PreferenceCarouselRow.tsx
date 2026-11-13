@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { PreferenceCategory } from '../categories';
 import { ArrowIcon } from '../icons';
 
@@ -20,9 +20,24 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
     onChoose,
 }) => {
     const [gridOpen, setGridOpen] = useState(false);
+    const lastWheelStep = useRef<number | null>(null);
+    const touchStartX = useRef<number | null>(null);
     const option = category.options[index];
     const previous = category.options[(index - 1 + category.options.length) % category.options.length];
     const next = category.options[(index + 1) % category.options.length];
+    const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        if (Math.abs(delta) < 10 || (lastWheelStep.current !== null && event.timeStamp - lastWheelStep.current < 180)) return;
+        lastWheelStep.current = event.timeStamp;
+        onStep(delta > 0 ? 1 : -1);
+    };
+    const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+        const startX = touchStartX.current;
+        const endX = event.changedTouches[0]?.clientX;
+        touchStartX.current = null;
+        if (startX === null || endX === undefined || Math.abs(endX - startX) < 40) return;
+        onStep(endX < startX ? 1 : -1);
+    };
 
     return (
         <div className="kc-row">
@@ -41,7 +56,14 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
             >
                 <ArrowIcon dir="left" />
             </button>
-            <div className="kc-choice-track" role="group" aria-label={`${category.label}: ${option}`}>
+            <div
+                className="kc-choice-track"
+                role="group"
+                aria-label={`${category.label}: ${option}`}
+                onWheel={handleWheel}
+                onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; }}
+                onTouchEnd={handleTouchEnd}
+            >
                 <span className="kc-choice-side">{previous}</span>
                 <button
                     className={`kc-choice-main ${selected === option ? 'kc-choice-picked' : ''}`}

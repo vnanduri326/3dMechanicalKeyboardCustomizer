@@ -1,8 +1,16 @@
 export const PREFERENCE_CATEGORIES = [
     {
-        key: 'size',
-        label: 'Keyboard Size',
-        options: ['Full-size', 'Tenkeyless', '75%', '60%', 'Low profile'],
+        key: 'keycap',
+        label: 'Keycap Profile',
+        options: [
+            'Cherry Profile',
+            'OEM Profile',
+            'Leopold Profile',
+            'SA Profile',
+            'Varmilo Profile',
+            'Cubic Profile',
+            'Low Profile',
+        ],
     },
     {
         key: 'switch',
@@ -16,17 +24,9 @@ export const PREFERENCE_CATEGORIES = [
         ],
     },
     {
-        key: 'keycap',
-        label: 'Keycap Profile',
-        options: [
-            'Cherry Profile',
-            'OEM Profile',
-            'Leopold Profile',
-            'SA Profile',
-            'Varmilo Profile',
-            'Cubic Profile',
-            'Low Profile',
-        ],
+        key: 'size',
+        label: 'Keyboard Size',
+        options: ['Full-size', 'Tenkeyless', '75%', '60%', 'Low profile'],
     },
 ] as const;
 

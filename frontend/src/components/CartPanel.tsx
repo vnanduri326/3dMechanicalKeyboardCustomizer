@@ -1,5 +1,4 @@
-// cart contents shown in left panel when the cart is selected
-// shipping/taxes/total are placeholders for now but subtotal is computed
+
 
 import React from 'react';
 import {PreferenceSelection} from '../types';
