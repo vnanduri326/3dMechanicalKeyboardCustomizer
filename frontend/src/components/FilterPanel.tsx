@@ -1,70 +1,121 @@
-// frontend/src/components/FilterPanel.tsx
 import React from 'react';
+import { CatalogFilters } from '../types';
 
 interface FilterPanelProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  selectedType: string;
-  onTypeChange: (type: string) => void;
-  selectedTags: string[];
-  onTagToggle: (tag: string) => void;
+  filters: CatalogFilters;
+  onFiltersChange: (filters: CatalogFilters) => void;
+  canRecommend: boolean;
+  onRecommend: (event: React.FormEvent<HTMLFormElement>) => void;
+  recommendationsLoading: boolean;
+  recommendationError: string;
 }
 
 export const FilterPanel: React.FC<FilterPanelProps> = ({
-  searchTerm,
-  onSearchChange,
-  selectedType,
-  onTypeChange,
-  selectedTags,
-  onTagToggle,
+  filters,
+  onFiltersChange,
+  canRecommend,
+  onRecommend,
+  recommendationsLoading,
+  recommendationError,
 }) => {
+  const setFilter = <K extends keyof CatalogFilters>(key: K, value: CatalogFilters[K]) => {
+    onFiltersChange({ ...filters, [key]: value });
+  };
+
   return (
-    <aside className="w-64 bg-slate-100 p-4 border-r border-slate-300">
-      <h2 className="text-xl font-bold mb-4 font-mono">Filters</h2>
-
-      {/* Search */}
-      <div className="mb-4">
+    <div className="kc-filter-body">
+      <div className="kc-filter-preview" aria-hidden="true">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line x1="0" y1="0" x2="100" y2="100" />
+          <line x1="100" y1="0" x2="0" y2="100" />
+        </svg>
+      </div>
+      <label className="kc-search-field">
+        <span className="kc-sr-only">Search products</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="7.2" />
+          <path d="m16.2 16.2 5 5" />
+        </svg>
         <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full p-2 border rounded font-mono text-sm"
+          type="search"
+          value={filters.search}
+          onChange={(event) => setFilter('search', event.target.value)}
+          placeholder="Search products"
         />
-      </div>
+      </label>
 
-      {/* Category Selection */}
-      <div className="mb-6">
-        <h3 className="font-semibold mb-2 font-mono">Category</h3>
-        {['all', 'keyboard', 'switch', 'keycaps', 'pcb_plate'].map((cat) => (
-          <label key={cat} className="block text-sm capitalize mb-1 font-mono">
-            <input
-              type="radio"
-              name="category"
-              checked={selectedType === cat}
-              onChange={() => onTypeChange(cat)}
-              className="mr-2"
-            />
-            {cat}
-          </label>
-        ))}
-      </div>
+      <section className="kc-filter-section" aria-labelledby="kc-price-title">
+        <h3 id="kc-price-title">Price</h3>
+        <input
+          className="kc-price-range"
+          type="range"
+          min={25}
+          max={125}
+          step={25}
+          value={filters.maxPrice}
+          onChange={(event) => setFilter('maxPrice', Number(event.target.value))}
+          aria-label="Maximum product price"
+          aria-valuetext={filters.maxPrice === 125 ? '$125 and up' : `Up to $${filters.maxPrice}`}
+        />
+        <div className="kc-price-scale" aria-hidden="true">
+          {[25, 50, 75, 100, 125].map((price) => (
+            <span key={price}>${price}{price === 125 ? '+' : ''}</span>
+          ))}
+        </div>
+      </section>
 
-      {/* Spec Tags */}
-      <div>
-        <h3 className="font-semibold mb-2 font-mono">Specs</h3>
-        {['feel:linear', 'feel:tactile', 'layout:75%', 'profile:cherry'].map((tag) => (
-          <label key={tag} className="block text-sm mb-1 font-mono">
+      <fieldset className="kc-filter-section kc-category-filters">
+        <legend>Category</legend>
+        <label className="kc-filter-option">
+          <input
+            type="checkbox"
+            checked={filters.keycaps}
+            onChange={(event) => setFilter('keycaps', event.target.checked)}
+          />
+          <span>Keycaps</span>
+        </label>
+        {filters.keycaps && (
+          <label className="kc-filter-option kc-filter-nested">
             <input
               type="checkbox"
-              checked={selectedTags.includes(tag)}
-              onChange={() => onTagToggle(tag)}
-              className="mr-2"
+              checked={filters.oemProfile}
+              onChange={(event) => setFilter('oemProfile', event.target.checked)}
             />
-            {tag}
+            <span>OEM profile</span>
           </label>
-        ))}
-      </div>
-    </aside>
+        )}
+        <label className="kc-filter-option">
+          <input
+            type="checkbox"
+            checked={filters.switches}
+            onChange={(event) => setFilter('switches', event.target.checked)}
+          />
+          <span>Switches</span>
+        </label>
+        <label className="kc-filter-option">
+          <input
+            type="checkbox"
+            checked={filters.pcbPlates}
+            onChange={(event) => setFilter('pcbPlates', event.target.checked)}
+          />
+          <span>PCB/Plates</span>
+        </label>
+        <label className="kc-filter-option">
+          <input
+            type="checkbox"
+            checked={filters.cases}
+            onChange={(event) => setFilter('cases', event.target.checked)}
+          />
+          <span>Cases</span>
+        </label>
+      </fieldset>
+
+      <form className="kc-recommend-form" onSubmit={onRecommend}>
+        <button type="submit" disabled={!canRecommend || recommendationsLoading}>
+          {recommendationsLoading ? 'Finding parts...' : 'Find closest parts'}
+        </button>
+        {recommendationError && <p className="kc-recommend-error" role="alert">{recommendationError}</p>}
+      </form>
+    </div>
   );
 };
