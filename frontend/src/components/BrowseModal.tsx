@@ -19,6 +19,32 @@ function formatPrice(p: Product): string {
   return n != null && !Number.isNaN(Number(n)) ? Number(n).toFixed(2) : '—';
 }
 
+function BrowseThumb({ product }: { product: Product }) {
+  const [failed, setFailed] = useState(false);
+  const showImg = product.image_url && !failed;
+
+  return (
+    <div className="kc-browse-thumb">
+      {showImg ? (
+        <img
+          src={product.image_url}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="kc-browse-thumb-ph" aria-hidden>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <line x1="0" y1="0" x2="100" y2="100" />
+            <line x1="100" y1="0" x2="0" y2="100" />
+          </svg>
+        </span>
+      )}
+    </div>
+  );
+}
+
 export const BrowseModal: React.FC<BrowseModalProps> = ({
   title,
   products,
@@ -27,6 +53,8 @@ export const BrowseModal: React.FC<BrowseModalProps> = ({
   onClose,
   onApply,
 }) => {
+  const list = products.filter((p) => productToSlot(p) === slot);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() =>
     new Set(cartLines.filter((l) => l.slot === slot).map((l) => l.product.id))
   );
@@ -72,34 +100,25 @@ export const BrowseModal: React.FC<BrowseModalProps> = ({
         </div>
         <p className="kc-modal-hint">Select one or more products, then Apply to update your cart.</p>
         <div className="kc-browse-grid">
-          {products.length === 0 ? (
+          {list.length === 0 ? (
             <p className="kc-modal-empty">No products in this category with the current filters.</p>
           ) : (
-            products.map((p) => {
+            list.map((p) => {
               const checked = selectedIds.has(p.id);
-              const slotOk = productToSlot(p) === slot;
               return (
-                <label
+                <button
                   key={p.id}
-                  className={`kc-browse-card ${checked ? 'kc-browse-card--on' : ''} ${!slotOk ? 'kc-browse-card--disabled' : ''}`}
+                  type="button"
+                  className={`kc-browse-card ${checked ? 'kc-browse-card--on' : ''}`}
+                  aria-pressed={checked}
+                  onClick={() => toggle(p.id)}
                 >
-                  <input
-                    type="checkbox"
-                    className="kc-browse-check"
-                    checked={checked}
-                    disabled={!slotOk}
-                    onChange={() => toggle(p.id)}
-                  />
                   <div className="kc-browse-card-inner">
-                    {p.image_url ? (
-                      <img src={p.image_url} alt="" className="kc-browse-img" />
-                    ) : (
-                      <div className="kc-browse-img kc-browse-img--ph" aria-hidden />
-                    )}
+                    <BrowseThumb product={p} />
                     <span className="kc-browse-name">{p.canonical_name}</span>
                     <span className="kc-browse-price">${formatPrice(p)}</span>
                   </div>
-                </label>
+                </button>
               );
             })
           )}
