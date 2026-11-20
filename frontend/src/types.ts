@@ -42,10 +42,13 @@ export interface CatalogFilters {
   search: string;
   maxPrice: number;
   keycaps: boolean;
-  oemProfile: boolean;
+  keycapProfiles: string[];
   switches: boolean;
+  switchTypes: string[];
   pcbPlates: boolean;
+  plateMaterials: string[];
   cases: boolean;
+  caseSizes: string[];
 }
 
 export interface PartRecommendation extends Product {

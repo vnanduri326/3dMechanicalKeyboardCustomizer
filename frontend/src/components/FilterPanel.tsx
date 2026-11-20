@@ -1,9 +1,32 @@
 import React from 'react';
-import { CatalogFilters } from '../types';
+import { FILTER_SUBCATEGORIES, type CatalogSubfilterKey } from '../catalogSubfilters';
+import { CatalogFilters, Product } from '../types';
+import { FilteredCatalogList } from './FilteredCatalogList';
+
+const SUBFILTER_FIELDS: Record<
+  CatalogSubfilterKey,
+  { parent: keyof CatalogFilters; selected: keyof CatalogFilters }
+> = {
+  keycaps: { parent: 'keycaps', selected: 'keycapProfiles' },
+  switches: { parent: 'switches', selected: 'switchTypes' },
+  pcbPlates: { parent: 'pcbPlates', selected: 'plateMaterials' },
+  cases: { parent: 'cases', selected: 'caseSizes' },
+};
+
+function toggleSubfilter(
+  filters: CatalogFilters,
+  selectedKey: 'keycapProfiles' | 'switchTypes' | 'plateMaterials' | 'caseSizes',
+  option: string,
+  checked: boolean,
+): string[] {
+  const current = filters[selectedKey];
+  return checked ? [...current, option] : current.filter((value) => value !== option);
+}
 
 interface FilterPanelProps {
   filters: CatalogFilters;
   onFiltersChange: (filters: CatalogFilters) => void;
+  catalogProducts: Product[];
   recommendationsLoading: boolean;
   recommendationError: string;
 }
@@ -11,6 +34,7 @@ interface FilterPanelProps {
 export const FilterPanel: React.FC<FilterPanelProps> = ({
   filters,
   onFiltersChange,
+  catalogProducts,
   recommendationsLoading,
   recommendationError,
 }) => {
@@ -62,52 +86,57 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
       <fieldset className="kc-filter-section kc-category-filters">
         <legend>Category</legend>
-        <label className="kc-filter-option">
-          <input
-            type="checkbox"
-            checked={filters.keycaps}
-            onChange={(event) => setFilter('keycaps', event.target.checked)}
-          />
-          <span>Keycaps</span>
-        </label>
-        {filters.keycaps && (
-          <label className="kc-filter-option kc-filter-nested">
-            <input
-              type="checkbox"
-              checked={filters.oemProfile}
-              onChange={(event) => setFilter('oemProfile', event.target.checked)}
-            />
-            <span>OEM profile</span>
-          </label>
-        )}
-        <label className="kc-filter-option">
-          <input
-            type="checkbox"
-            checked={filters.switches}
-            onChange={(event) => setFilter('switches', event.target.checked)}
-          />
-          <span>Switches</span>
-        </label>
-        <label className="kc-filter-option">
-          <input
-            type="checkbox"
-            checked={filters.pcbPlates}
-            onChange={(event) => setFilter('pcbPlates', event.target.checked)}
-          />
-          <span>PCB/Plates</span>
-        </label>
-        <label className="kc-filter-option">
-          <input
-            type="checkbox"
-            checked={filters.cases}
-            onChange={(event) => setFilter('cases', event.target.checked)}
-          />
-          <span>Cases</span>
-        </label>
+        {(Object.keys(FILTER_SUBCATEGORIES) as CatalogSubfilterKey[]).map((groupKey) => {
+          const { parent, selected } = SUBFILTER_FIELDS[groupKey];
+          const parentOn = Boolean(filters[parent]);
+          const label =
+            groupKey === 'keycaps'
+              ? 'Keycaps'
+              : groupKey === 'switches'
+                ? 'Switches'
+                : groupKey === 'pcbPlates'
+                  ? 'PCB/Plates'
+                  : 'Cases';
+          const selectedKey = selected as 'keycapProfiles' | 'switchTypes' | 'plateMaterials' | 'caseSizes';
+          const selectedValues = filters[selectedKey];
+
+          return (
+            <React.Fragment key={groupKey}>
+              <label className="kc-filter-option">
+                <input
+                  type="checkbox"
+                  checked={parentOn}
+                  onChange={(event) => setFilter(parent, event.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+              {parentOn && (
+                <div className="kc-filter-subgroup" role="group" aria-label={`${label} subcategories`}>
+                  {FILTER_SUBCATEGORIES[groupKey].map((option) => (
+                    <label key={option} className="kc-filter-option kc-filter-nested">
+                      <input
+                        type="checkbox"
+                        checked={selectedValues.includes(option)}
+                        onChange={(event) => {
+                          onFiltersChange({
+                            ...filters,
+                            [selectedKey]: toggleSubfilter(filters, selectedKey, option, event.target.checked),
+                          });
+                        }}
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
       </fieldset>
 
       {recommendationsLoading && <p className="kc-recommend-loading" role="status">Finding closest parts...</p>}
       {recommendationError && <p className="kc-recommend-error" role="alert">{recommendationError}</p>}
+      <FilteredCatalogList products={catalogProducts} />
     </div>
   );
 };
