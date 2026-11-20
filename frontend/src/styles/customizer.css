@@ -58,6 +58,7 @@
     }
 }
 
+
 /* dark vals, applied when light/dark button is used */
     :root[data-theme="dark"]{
         --mid: #1b2528;
@@ -461,3 +462,32 @@
             width: 260px;
         }
     }
+
+    /* draggable edge between a side panel and the middle section */
+    .kc-resizer{
+        flex: none;
+        width: 8px;
+        margin: 0 -4px;      /* overlaps both neighbours so nothing shifts */
+        position: relative;
+        z-index: 6;
+        cursor: col-resize;
+        touch-action: none;
+        outline: none;
+    }
+    .kc-resizer::after{
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 3px;
+        width: 2px;
+        background: var(--accent);
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+    .kc-resizer:hover::after,
+    .kc-resizer:focus-visible::after,
+    .kc-resizer.kc-dragging::after{
+        opacity: 0.9;
+    }
+    
