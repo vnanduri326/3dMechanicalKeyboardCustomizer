@@ -103,6 +103,99 @@ def test_60_percent_plus_product_type_does_not_match_exact_60_percent():
     assert ranked == []
 
 
+def test_case_recommendation_matches_selected_keyboard_size():
+    cases = [
+        SimpleNamespace(
+            type="case",
+            canonical_name="TKL Aluminum Case",
+            product_type_raw="Keyboard Cases",
+            description="",
+            tags=[],
+            color_variants=[],
+            min_price=80,
+        ),
+        SimpleNamespace(
+            type="case",
+            canonical_name="60% Aluminum Case",
+            product_type_raw="Keyboard Cases",
+            description="",
+            tags=[],
+            color_variants=[],
+            min_price=60,
+        ),
+        SimpleNamespace(
+            type="case",
+            canonical_name="Varmilo Sword 2 68 Replacement Aluminum Frame",
+            product_type_raw="Keyboard Cases",
+            description="",
+            tags=[],
+            color_variants=[],
+            min_price=70,
+        ),
+    ]
+
+    ranked = rank_part_recommendations(
+        cases,
+        RecommendationPreferences(size="Tenkeyless"),
+    )
+
+    assert [(product.canonical_name, category, score) for product, category, score, _ in ranked] == [
+        ("TKL Aluminum Case", "case", 100),
+    ]
+    ranked_65 = rank_part_recommendations(
+        cases,
+        RecommendationPreferences(size="65%"),
+    )
+    assert [(product.canonical_name, category, score) for product, category, score, _ in ranked_65] == [
+        ("Varmilo Sword 2 68 Replacement Aluminum Frame", "case", 100),
+    ]
+
+
+def test_plate_recommendation_requires_both_selected_material_and_size():
+    plates = [
+        SimpleNamespace(
+            type="pcb_plate",
+            canonical_name="75% FR4 Plate",
+            product_type_raw="Keyboard Plates",
+            description="",
+            tags=[],
+            color_variants=[],
+            min_price=30,
+        ),
+        SimpleNamespace(
+            type="pcb_plate",
+            canonical_name="60% FR4 Plate",
+            product_type_raw="Keyboard Plates",
+            description="",
+            tags=[],
+            color_variants=[],
+            min_price=20,
+        ),
+        SimpleNamespace(
+            type="pcb_plate",
+            canonical_name="75% Brass Plate",
+            product_type_raw="Keyboard Plates",
+            description="",
+            tags=[],
+            color_variants=[],
+            min_price=35,
+        ),
+    ]
+
+    ranked = rank_part_recommendations(
+        plates,
+        RecommendationPreferences(plate="FR4", size="75%"),
+    )
+
+    assert [(product.canonical_name, score) for product, _, score, _ in ranked] == [
+        ("75% FR4 Plate", 100),
+    ]
+    assert rank_part_recommendations(
+        plates,
+        RecommendationPreferences(size="75%"),
+    ) == []
+
+
 def test_recommendation_options_use_product_details_and_variants():
     keycaps = SimpleNamespace(
         type="keycap",

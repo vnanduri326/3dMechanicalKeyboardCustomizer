@@ -13,6 +13,15 @@ _SIZES = {
     "tenkeyless": "80%",
 }
 _SIZE_NUMBERS = ("40", "60", "65", "68", "70", "75", "80", "96", "98", "100")
+_KEY_COUNT_SIZES = {
+    "61": "60%",
+    "68": "65%",
+    "67": "65%",
+    "84": "75%",
+    "87": "80%",
+    "104": "100%",
+    "108": "100%",
+}
 _KEYCAP_TERMS = (
     "PBT",
     "ABS",
@@ -35,7 +44,7 @@ _PLATE_MATERIALS = (
     "Brass",
     "Carbon fiber",
     "POM",
-    "Steel",
+    "Stainless Steel",
     "Copper",
 )
 
@@ -79,6 +88,11 @@ def _sizes_in(value: str, include_bare_numbers: bool) -> set[str]:
         for number in _SIZE_NUMBERS
         if re.search(rf"(?<![a-z0-9]){number}\s*%(?!\+)", value.casefold())
     }
+    sizes.update(
+        size
+        for key_count, size in _KEY_COUNT_SIZES.items()
+        if re.search(rf"(?<![a-z0-9]){key_count}(?![a-z0-9])", value.casefold())
+    )
     if include_bare_numbers:
         sizes.update(
             f"{number}%"
@@ -101,6 +115,12 @@ def _size_values(product: Any) -> set[str]:
     type_sizes = _sizes_in(product_type, include_bare_numbers=False)
     if type_sizes:
         return type_sizes
+
+    description = str(_value(product, "description", "") or "")
+    description = html.unescape(re.sub(r"<[^>]*>", " ", description))
+    description_sizes = _sizes_in(description, include_bare_numbers=False)
+    if description_sizes:
+        return description_sizes
 
     tags = " ".join(_value(product, "tags", []) or [])
     return _sizes_in(tags, include_bare_numbers=True)
@@ -172,6 +192,25 @@ def _matches_size(product: Any, preference: str) -> bool:
     return requested in _size_values(product)
 
 
+def _is_case_product(product: Any) -> bool:
+    product_type = str(_value(product, "type", "") or "").casefold()
+    if product_type == "case":
+        return True
+    if product_type not in {"other", "keyboard"}:
+        return False
+
+    case_details = _normalized(
+        " ".join(
+            [
+                str(_value(product, "canonical_name", "") or ""),
+                str(_value(product, "product_type_raw", "") or ""),
+                *(_value(product, "tags", []) or []),
+            ]
+        )
+    )
+    return bool(re.search(r"\bcases?\b", case_details))
+
+
 def rank_part_recommendations(
     products: Iterable[Any], preferences: RecommendationPreferences
 ) -> list[tuple[Any, str, int, list[str]]]:
@@ -179,6 +218,7 @@ def rank_part_recommendations(
         "keycap": [("keycap", preferences.keycap)],
         "switch": [("switch", preferences.switch)],
         "pcb_plate": [("plate", preferences.plate), ("size", preferences.size)],
+        "case": [("size", preferences.size)],
     }
     ranked: dict[str, list[tuple[Any, int, list[str], float]]] = {
         category: [] for category in requested_by_category
@@ -186,7 +226,11 @@ def rank_part_recommendations(
 
     for product in products:
         product_type = str(_value(product, "type", "") or "").casefold()
-        category = "keycap" if product_type == "keycaps" else product_type
+        category = (
+            "case"
+            if _is_case_product(product)
+            else "keycap" if product_type == "keycaps" else product_type
+        )
         if category not in requested_by_category:
             continue
 
@@ -195,6 +239,8 @@ def rank_part_recommendations(
             for name, value in requested_by_category[category]
             if value and value.strip()
         ]
+        if category == "pcb_plate" and len(requested) != 2:
+            continue
         if not requested:
             continue
 
@@ -209,6 +255,8 @@ def rank_part_recommendations(
             if matched:
                 matches.append(f"{name.title()}: {value}")
 
+        if category == "pcb_plate" and len(matches) != len(requested):
+            continue
         if not matches:
             continue
 

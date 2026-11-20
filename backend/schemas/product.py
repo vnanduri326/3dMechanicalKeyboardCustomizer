@@ -203,6 +203,8 @@ def normalize_listing(listing: RawListing) -> Product:
     lowered_type = listing.product_type.lower()
     if "plate" in lowered_type or "pcb" in lowered_type:
         product_type = "pcb_plate"
+    elif "case" in lowered_type:
+        product_type = "case"
     elif "keyboard" in lowered_type:
         product_type = "keyboard"
     elif "switch" in lowered_type:

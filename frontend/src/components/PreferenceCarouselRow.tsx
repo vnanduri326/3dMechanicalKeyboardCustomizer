@@ -1,6 +1,51 @@
 import React, { useRef, useState } from 'react';
 import { PreferenceCategory } from '../categories';
 import { ArrowIcon } from '../icons';
+import ModelViewer from './ModelViewer';
+
+const modelUrls: Partial<Record<PreferenceCategory['key'], Record<string, string>>> = {
+    plate: {
+        Aluminum: '/models/plates/3d-mechanical-keyboard-plate.glb',
+        Brass: '/models/plates/3d-mechanical-keyboard-plate.glb',
+        Polycarbonate: '/models/plates/3d-mechanical-keyboard-plate.glb',
+        FR4: '/models/plates/3d-mechanical-keyboard-plate.glb',
+        'Stainless Steel': '/models/plates/3d-mechanical-keyboard-plate.glb',
+    },
+    keycap: {
+        'Cherry Profile': '/models/keycaps/cherry-cap.glb',
+        'Leopold Profile': '/models/keycaps/cherry-cap.glb',
+        'SA Profile': '/models/keycaps/sa-cap.glb',
+        'OEM Profile': '/models/keycaps/oem-cap.glb',
+        'Cubic Profile': '/models/keycaps/oem-cap.glb',
+        'Varmilo Profile': '/models/keycaps/oem-cap.glb',
+        'Low Profile': '/models/keycaps/lowprofile-cap.glb',
+    },
+    switch: {
+        'Linear Switches': '/models/switches/switch.glb',
+        'Tactile Switches': '/models/switches/switch.glb',
+        'Clicky Switches': '/models/switches/switch.glb',
+        'HE / Magnetic Switches': '/models/switches/switch.glb',
+        'Silent Switches': '/models/switches/switch.glb',
+    },
+    size: {
+        'Full-size': '/models/cases/fullsize-keeb.glb',
+        Tenkeyless: '/models/cases/tenkeyless-keeb.glb',
+        '75%': '/models/cases/75-keeb.glb',
+        '65%': '/models/cases/65-keeb.glb',
+        '60%': '/models/cases/Keyboard.glb',
+        'Low profile': '/models/cases/K3-Pro-US-Full-Model-3d.glb',
+    },
+};
+
+const modelColors: Partial<Record<PreferenceCategory['key'], Record<string, string>>> = {
+    plate: {
+        Aluminum: '#aeb8c2',
+        Brass: '#c49a3a',
+        Polycarbonate: '#8ecbe8',
+        FR4: '#000000',
+        'Stainless Steel': '#e0e4e8',
+    },
+};
 
 interface PreferenceCarouselRowProps {
     category: PreferenceCategory;
@@ -23,6 +68,11 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
     const lastWheelStep = useRef<number | null>(null);
     const touchStartX = useRef<number | null>(null);
     const option = category.options[index];
+    const modelUrl = modelUrls[category.key]?.[option];
+    const modelColor = modelColors[category.key]?.[option];
+    const zoomOutCap = modelUrl?.endsWith('sa-cap.glb') || modelUrl?.endsWith('oem-cap.glb');
+    const zoomInModel = category.key === 'size' || category.key === 'plate';
+    const boundsMargin = zoomOutCap ? 1.6 : zoomInModel ? 0.9 : 1.2;
     const previous = category.options[(index - 1 + category.options.length) % category.options.length];
     const next = category.options[(index + 1) % category.options.length];
     const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
@@ -65,13 +115,22 @@ export const PreferenceCarouselRow: React.FC<PreferenceCarouselRowProps> = ({
                 onTouchEnd={handleTouchEnd}
             >
                 <span className="kc-choice-side">{previous}</span>
-                <button
-                    className={`kc-choice-main ${selected === option ? 'kc-choice-picked' : ''}`}
-                    onClick={() => onSelect(option)}
-                    aria-pressed={selected === option}
-                >
-                    {option}
-                </button>
+                <div className="kc-choice-selected">
+                    {modelUrl && (
+                        <ModelViewer
+                            src={modelUrl}
+                            boundsMargin={boundsMargin}
+                            modelColor={modelColor}
+                        />
+                    )}
+                    <button
+                        className={`kc-choice-main ${selected === option ? 'kc-choice-picked' : ''}`}
+                        onClick={() => onSelect(option)}
+                        aria-pressed={selected === option}
+                    >
+                        {option}
+                    </button>
+                </div>
                 <span className="kc-choice-side">{next}</span>
             </div>
             <button

@@ -6,4 +6,7 @@ export default defineConfig({
   root: 'frontend',
   envDir: '..',
   plugins: [react()],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
 });

@@ -50,3 +50,16 @@ def test_normalize_listing_recognizes_plate_product_type():
     )
 
     assert normalize_listing(listing).type == "pcb_plate"
+
+
+def test_normalize_listing_recognizes_case_product_type():
+    listing = RawListing(
+        title="TKL Aluminum Case",
+        vendor="TestBrand",
+        product_type="Keyboard Cases",
+        variants=[],
+        options=[],
+        images=[],
+    )
+
+    assert normalize_listing(listing).type == "case"

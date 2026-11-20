@@ -14,7 +14,7 @@ export interface Product {
   id: string;
   canonical_name: string;   // Maps to backend canonical_name
   handle?: string;
-  type: "keyboard" | "switch" | "keycap" | "keycaps" | "pcb_plate" | "other";
+  type: "keyboard" | "switch" | "keycap" | "keycaps" | "pcb_plate" | "case" | "other";
   brand: string;
   product_type_raw?: string;
   min_price?: number | null;
@@ -22,13 +22,6 @@ export interface Product {
   image_url?: string;
   source_url?: string;
   color_variants?: ColorVariant[];
-}
-
-export interface PreferenceSelection {
-  keyboardSize?: string;
-  switch?: string;
-  keycapProfile?: string;
-  pcbPlate?: Product;
 }
 
 export interface RecommendationPreferences {
@@ -56,7 +49,7 @@ export interface CatalogFilters {
 }
 
 export interface PartRecommendation extends Product {
-  category: 'keycap' | 'switch' | 'pcb_plate';
+  category: 'keycap' | 'switch' | 'pcb_plate' | 'case';
   score: number;
   matching_preferences: string[];
 }

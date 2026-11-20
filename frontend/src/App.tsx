@@ -5,21 +5,19 @@ import {
   CatalogFilters,
   PartRecommendation,
   Product,
-  PreferenceSelection,
   RecommendationPreferences,
 } from './types';
 import { fetchProducts, fetchRecommendations } from './services/api';
-import { PLATE_CATEGORY, PREFERENCE_CATEGORIES, PreferenceCategoryKey} from './categories.ts';
+import { PREFERENCE_CATEGORIES, PreferenceCategoryKey} from './categories.ts';
 import { FilterPanel } from './components/FilterPanel';
 import {CartPanel} from './components/CartPanel.tsx';
 import {LeftPanel, LeftMode} from './components/LeftPanel.tsx';
 import {PreferenceCarouselRow} from './components/PreferenceCarouselRow';
-import {CarouselRow} from './components/CarouselRow';
 import {InfoPanel} from './components/InfoPanel.tsx';
 import {InfoIcon} from './icons.tsx';
 
 type ByCategory<T> = Record<PreferenceCategoryKey, T>;
-const zeroes = (): ByCategory<number> => ({size: 0, switch: 0, keycap: 0});
+const zeroes = (): ByCategory<number> => ({size: 0, switch: 0, keycap: 0, plate: 0});
 const emptyPreferences = (): RecommendationPreferences => ({
   keycap: '',
   switch: '',
@@ -39,10 +37,9 @@ const initialCatalogFilters: CatalogFilters = {
 export default function App() {
   const [centered, setCentered] = useState<ByCategory<number>>(zeroes);
   const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
-  const [plateIndex, setPlateIndex] = useState(0);
   const [plateError, setPlateError] = useState('');
   const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(initialCatalogFilters);
-  const [selection, setSelection] = useState<PreferenceSelection>({});
+  const [cartItems, setCartItems] = useState<Product[]>([]);
   const [leftMode, setLeftMode] = useState<LeftMode>('filters');
   const [leftOpen, setLeftOpen] = useState(true);
   const [infoOpen, setInfoOpen] = useState(true);
@@ -56,6 +53,7 @@ export default function App() {
       fetchProducts('keycap', undefined, undefined, 100),
       fetchProducts('switch', undefined, undefined, 100),
       fetchProducts('pcb_plate', undefined, undefined, 100),
+      fetchProducts('case', undefined, undefined, 100),
       fetchProducts('other', undefined, undefined, 100),
     ])
       .then((products) => setCatalogProducts(products.flat()))
@@ -63,6 +61,36 @@ export default function App() {
         setPlateError(error instanceof Error ? error.message : 'Failed to load catalog products');
       });
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const hasPreferences = Object.values(preferences).some((value) => value.trim());
+
+    setRecommendations(null);
+    setRecommendationError('');
+    if (!hasPreferences) {
+      setRecommendationsLoading(false);
+      return;
+    }
+
+    setRecommendationsLoading(true);
+    fetchRecommendations(preferences)
+      .then((items) => {
+        if (active) setRecommendations(items);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setRecommendationError(error instanceof Error ? error.message : 'Failed to recommend parts');
+        }
+      })
+      .finally(() => {
+        if (active) setRecommendationsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [preferences]);
 
   const filteredCatalog = catalogProducts.filter((product) => {
     const type = product.type.toLowerCase();
@@ -75,7 +103,7 @@ export default function App() {
     const isKeycap = type === 'keycap' || type === 'keycaps';
     const isSwitch = type === 'switch';
     const isPlate = type === 'pcb_plate';
-    const isCase = type === 'other' && /case/i.test(productText);
+    const isCase = type === 'case' || (type === 'other' && /case/i.test(productText));
 
     if (
       !(isKeycap && catalogFilters.keycaps)
@@ -104,37 +132,23 @@ export default function App() {
     }
     return true;
   });
-  const plates = filteredCatalog.filter((product) => product.type.toLowerCase() === 'pcb_plate');
-  const catalogMatches = filteredCatalog.filter((product) => product.type.toLowerCase() !== 'pcb_plate');
-
   const setPreference = (category: PreferenceCategoryKey, value: string) => {
     const preferenceField = category === 'keycap' ? 'keycap' : category;
     setPreferences((current) => ({ ...current, [preferenceField]: value }));
-    setSelection((current) => ({
-      ...current,
-      [category === 'size' ? 'keyboardSize' : category === 'keycap' ? 'keycapProfile' : 'switch']: value,
-    }));
-    setRecommendations(null);
-    setRecommendationError('');
-  };
-
-  const handleRecommend = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setRecommendationsLoading(true);
-    setRecommendationError('');
-    try {
-      setRecommendations(await fetchRecommendations(preferences));
-    } catch (error) {
-      setRecommendationError(error instanceof Error ? error.message : 'Failed to recommend parts');
-    } finally {
-      setRecommendationsLoading(false);
-    }
   };
 
   const handleCatalogFiltersChange = (filters: CatalogFilters) => {
     setCatalogFilters(filters);
-    setRecommendations(null);
-    setRecommendationError('');
+  };
+
+  const addToCart = (product: Product) => {
+    setCartItems((current) => (
+      current.some((item) => item.id === product.id) ? current : [...current, product]
+    ));
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCartItems((current) => current.filter((item) => item.id !== productId));
   };
 
   const step = (category: PreferenceCategoryKey, direction: 1 | -1) => {
@@ -144,24 +158,7 @@ export default function App() {
     setPreference(category, options[nextIndex]);
   };
 
-  const selectPlate = (product: Product) => {
-    const material = product.color_variants?.find((variant) => variant.plate_material)?.plate_material
-      ?? product.canonical_name;
-    setSelection((current) => ({ ...current, pcbPlate: product }));
-    setPreferences((current) => ({ ...current, plate: material }));
-    setRecommendations(null);
-    setRecommendationError('');
-  };
-
-  const stepPlate = (direction: 1 | -1) => {
-    if (plates.length) {
-      const nextIndex = (plateIndex + direction + plates.length) % plates.length;
-      setPlateIndex(nextIndex);
-      selectPlate(plates[nextIndex]);
-    }
-  };
-
-  const cartCount = Object.values(selection).filter(Boolean).length;
+  const cartCount = cartItems.length;
 
   // Light/dark preview toggle sets theme 
   const toggleTheme = () => {
@@ -176,13 +173,11 @@ export default function App() {
         <FilterPanel
           filters={catalogFilters}
           onFiltersChange={handleCatalogFiltersChange}
-          canRecommend={Object.values(preferences).some((value) => value.trim())}
-          onRecommend={handleRecommend}
           recommendationsLoading={recommendationsLoading}
           recommendationError={recommendationError}
         />
       }
-      cart={<CartPanel selection={selection} />}
+      cart={<CartPanel items={cartItems} onRemove={removeFromCart} />}
       />
       <main className="kc-mid">
         {PREFERENCE_CATEGORIES.map((category) => (
@@ -196,25 +191,7 @@ export default function App() {
             onChoose={(index) => setCentered((current) => ({ ...current, [category.key]: index }))}
           />
         ))}
-        {catalogFilters.pcbPlates && (
-          <CarouselRow
-            category={PLATE_CATEGORY}
-            products={plates}
-            index={plateIndex}
-            selectedId={selection.pcbPlate?.id}
-            onStep={stepPlate}
-            onSelect={selectPlate}
-          />
-        )}
         {plateError && <p className="kc-recommend-error" role="alert">{plateError}</p>}
-        {recommendations !== null && (
-          <div className="kc-recommend-status">
-            {recommendations.length
-              ? `Closest parts found: ${recommendations.length}`
-              : 'No matching parts found for those preferences.'}
-            <button onClick={() => setRecommendations(null)}>Clear recommendations</button>
-          </div>
-        )}
         <button className="kc-theme-btn" onClick={toggleTheme}>Light/Dark</button>
         {!infoOpen && (
           <button className="kc-info-open" onClick={() => setInfoOpen(true)} aria-label="Open info"><InfoIcon /></button>
@@ -223,9 +200,10 @@ export default function App() {
       {infoOpen && (
         <InfoPanel
           preferences={preferences}
-          plateProduct={selection.pcbPlate}
           recommendations={recommendations ?? []}
-          catalogProducts={catalogMatches}
+          cartItemIds={cartItems.map((item) => item.id)}
+          onAddToCart={addToCart}
+          catalogProducts={filteredCatalog}
           onClose={() => setInfoOpen(false)}
         />
       )}

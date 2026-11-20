@@ -4,8 +4,6 @@ import { CatalogFilters } from '../types';
 interface FilterPanelProps {
   filters: CatalogFilters;
   onFiltersChange: (filters: CatalogFilters) => void;
-  canRecommend: boolean;
-  onRecommend: (event: React.FormEvent<HTMLFormElement>) => void;
   recommendationsLoading: boolean;
   recommendationError: string;
 }
@@ -13,8 +11,6 @@ interface FilterPanelProps {
 export const FilterPanel: React.FC<FilterPanelProps> = ({
   filters,
   onFiltersChange,
-  canRecommend,
-  onRecommend,
   recommendationsLoading,
   recommendationError,
 }) => {
@@ -110,12 +106,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         </label>
       </fieldset>
 
-      <form className="kc-recommend-form" onSubmit={onRecommend}>
-        <button type="submit" disabled={!canRecommend || recommendationsLoading}>
-          {recommendationsLoading ? 'Finding parts...' : 'Find closest parts'}
-        </button>
-        {recommendationError && <p className="kc-recommend-error" role="alert">{recommendationError}</p>}
-      </form>
+      {recommendationsLoading && <p className="kc-recommend-loading" role="status">Finding closest parts...</p>}
+      {recommendationError && <p className="kc-recommend-error" role="alert">{recommendationError}</p>}
     </div>
   );
 };

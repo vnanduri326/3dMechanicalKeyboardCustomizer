@@ -42,7 +42,7 @@ class RecommendationPreferences(BaseModel):
 
 
 class PartRecommendationOut(ProductOut):
-    category: Literal["keycap", "switch", "pcb_plate"]
+    category: Literal["keycap", "switch", "pcb_plate", "case"]
     score: int
     matching_preferences: list[str] = Field(default_factory=list)
 

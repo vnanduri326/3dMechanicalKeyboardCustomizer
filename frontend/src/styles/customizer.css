@@ -293,43 +293,6 @@
         gap: 2px;
         font-size: 8px;
     }
-    .kc-recommend-form{
-        border-bottom: 1px solid var(--edge);
-        margin-bottom: 18px;
-        padding-bottom: 14px;
-    }
-    .kc-recommend-form summary{
-        cursor: pointer;
-        font-family: "Press Start 2P", monospace;
-        font-size: 10px;
-        line-height: 1.6;
-    }
-    .kc-recommend-form > p{
-        font-size: 11px;
-        line-height: 1.4;
-    }
-    .kc-recommend-form form{
-        display: grid;
-        gap: 8px;
-    }
-    .kc-recommend-form label{
-        display: grid;
-        gap: 4px;
-        font-size: 11px;
-    }
-    .kc-recommend-form input,
-    .kc-recommend-form select{
-        width: 100%;
-        min-width: 0;
-        padding: 7px;
-        border: 1px solid var(--edge);
-        border-radius: 5px;
-        background: var(--field);
-        color: var(--text);
-        font: inherit;
-        font-size: 11px;
-    }
-    .kc-recommend-form button,
     .kc-recommend-card-actions button,
     .kc-recommend-results > header button{
         border: 1px solid var(--btn-line);
@@ -338,9 +301,21 @@
         padding: 8px 10px;
         font-size: 11px;
     }
+    .kc-recommend-card-actions{
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+    }
     .kc-recommend-error{
         margin: 0;
         color: #a00024;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+    .kc-recommend-loading{
+        margin: 0;
         font-size: 11px;
         line-height: 1.4;
     }
@@ -350,20 +325,57 @@
         border-color: var(--edge);
     }
     .kc-cart-items{
-        flex: 1; 
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
+        scrollbar-color: var(--cart-fab-line) var(--field);
     }
     .kc-cart-item{
-        display: flex;
-        gap: 10px;
-        align-items: center;
+        display: grid;
+        grid-template-columns: 70px minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: start;
         font-size: 11px;
     }
-    .kc-price{
-        margin-left: auto;
+    .kc-cart-content{
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        flex-direction: column;
+    }
+    .kc-cart-thumb{
+        width: 70px;
+        height: 50px;
+        flex: none;
+        border: 1px solid var(--edge);
+        object-fit: cover;
+    }
+    .kc-cart-item-details{
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .kc-cart-item-name{
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+    .kc-cart-item-price{
+        align-self: flex-end;
+    }
+    .kc-cart-remove{
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-size: 18px !important;
+        line-height: 1;
+    }
+    .kc-cart-empty{
+        margin: 0;
+        font-size: 12px;
     }
     .kc-totals{
         border-top: 1px solid var(--edge);
@@ -374,10 +386,18 @@
     .kc-totals div{
         display: flex;
         justify-content: space-between;
+        gap: 8px;
     }
     .kc-total{
         margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--edge);
         font-size: 14px;
+    }
+    .kc-cart-note{
+        margin: 8px 0 0;
+        font-size: 9px;
+        line-height: 1.3;
     }
     .kc-swap{
         position: absolute;
@@ -439,6 +459,7 @@
         display: flex;
         align-items: center;
         gap: 14px;
+        padding-block: 4px;
         position: relative;
     }
     .kc-choice-track{
@@ -448,6 +469,35 @@
         justify-content: space-around;
         gap: 10px;
         min-width: 0;
+    }
+    .kc-choice-selected{
+        display: flex;
+        flex: 0 1 190px;
+        width: min(190px, 40%);
+        min-width: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+    .kc-choice-selected .kc-choice-main{
+        width: 100%;
+        min-width: 0;
+        min-height: 54px;
+        padding: 8px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        font-size: 18px;
+    }
+    .kc-model-viewer{
+        width: 100%;
+        height: 132px;
+        overflow: hidden;
+        border-radius: 8px;
+        background: var(--mid);
+    }
+    .kc-choice-selected .kc-model-viewer{
+        background: transparent;
     }
     .kc-choice-side{
         flex: 1;
@@ -467,10 +517,6 @@
         background: var(--grid-bg);
         font-size: 24px;
         font-weight: 700;
-    }
-    .kc-choice-main.kc-choice-picked{
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
     }
     .kc-choice-grid{
         position: absolute;
@@ -502,22 +548,7 @@
         font-size: 11px;
     }
     .kc-choice-grid button.kc-choice-grid-picked{
-        border-color: var(--accent);
         background: var(--grid-bg);
-    }
-    .kc-recommend-status{
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        font-size: 12px;
-    }
-    .kc-recommend-status button{
-        border: 1px solid var(--edge);
-        border-radius: 6px;
-        background: var(--field);
-        padding: 6px 9px;
-        font-size: 11px;
     }
     .kc-recommend-reasons{
         margin-top: 8px !important;
@@ -720,10 +751,22 @@
         .kc-choice-side{
             display: none;
         }
+        .kc-choice-selected{
+            flex: 1;
+            width: auto;
+        }
         .kc-choice-main{
             flex: 1;
             min-width: 0;
             min-height: 58px;
             font-size: 12px;
+        }
+        .kc-choice-selected .kc-choice-main{
+            flex: none;
+            min-height: 52px;
+            font-size: 12px;
+        }
+        .kc-model-viewer{
+            height: 100px;
         }
     }

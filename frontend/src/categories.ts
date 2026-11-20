@@ -26,7 +26,12 @@ export const PREFERENCE_CATEGORIES = [
     {
         key: 'size',
         label: 'Keyboard Size',
-        options: ['Full-size', 'Tenkeyless', '75%', '60%', 'Low profile'],
+        options: ['Full-size', 'Tenkeyless', '75%', '65%', '60%', 'Low profile'],
+    },
+    {
+        key: 'plate',
+        label: 'Plate Material',
+        options: ['Aluminum', 'Brass', 'Polycarbonate', 'FR4', 'Stainless Steel'],
     },
 ] as const;
 
