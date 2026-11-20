@@ -8,6 +8,7 @@ import {
   RecommendationPreferences,
 } from './types';
 import { fetchProducts, fetchRecommendations } from './services/api';
+import { productMatchesAnySubfilter } from './catalogSubfilters';
 import { PREFERENCE_CATEGORIES, PreferenceCategoryKey} from './categories.ts';
 import { FilterPanel } from './components/FilterPanel';
 import {CartPanel} from './components/CartPanel.tsx';
@@ -28,10 +29,13 @@ const initialCatalogFilters: CatalogFilters = {
   search: '',
   maxPrice: 125,
   keycaps: true,
-  oemProfile: false,
+  keycapProfiles: [],
   switches: true,
+  switchTypes: [],
   pcbPlates: true,
+  plateMaterials: [],
   cases: false,
+  caseSizes: [],
 };
 
 export default function App() {
@@ -114,11 +118,16 @@ export default function App() {
       return false;
     }
 
-    if (
-      catalogFilters.oemProfile
-      && isKeycap
-      && !/oem\s*profile|\boem\b/i.test(productText)
-    ) {
+    if (isKeycap && !productMatchesAnySubfilter(productText, catalogFilters.keycapProfiles, 'keycaps')) {
+      return false;
+    }
+    if (isSwitch && !productMatchesAnySubfilter(productText, catalogFilters.switchTypes, 'switches')) {
+      return false;
+    }
+    if (isPlate && !productMatchesAnySubfilter(productText, catalogFilters.plateMaterials, 'pcbPlates')) {
+      return false;
+    }
+    if (isCase && !productMatchesAnySubfilter(productText, catalogFilters.caseSizes, 'cases')) {
       return false;
     }
     if (catalogFilters.search.trim() && !productText.includes(catalogFilters.search.trim().toLowerCase())) {
@@ -173,6 +182,7 @@ export default function App() {
         <FilterPanel
           filters={catalogFilters}
           onFiltersChange={handleCatalogFiltersChange}
+          catalogProducts={filteredCatalog}
           recommendationsLoading={recommendationsLoading}
           recommendationError={recommendationError}
         />
@@ -203,7 +213,6 @@ export default function App() {
           recommendations={recommendations ?? []}
           cartItemIds={cartItems.map((item) => item.id)}
           onAddToCart={addToCart}
-          catalogProducts={filteredCatalog}
           onClose={() => setInfoOpen(false)}
         />
       )}

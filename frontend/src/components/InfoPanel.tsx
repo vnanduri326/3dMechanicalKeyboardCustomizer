@@ -8,7 +8,6 @@ interface InfoPanelProps {
     recommendations: PartRecommendation[];
     cartItemIds: string[];
     onAddToCart: (product: Product) => void;
-    catalogProducts: Product[];
     onClose: () => void;
 }
 
@@ -17,7 +16,6 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
     recommendations,
     cartItemIds,
     onAddToCart,
-    catalogProducts,
     onClose,
 }) => {
     const { width, dragging, min, max, handleProps } = useResizablePanel({
@@ -100,26 +98,6 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
                     <p>{preferences.plate || 'Choose a plate material in the carousel.'}</p>
                 </section>
                 {renderRecommendation('pcb_plate', 'PCB / Plate')}
-                <section className="kc-info-block kc-catalog-results">
-                    <h3>Filtered catalog</h3>
-                    {catalogProducts.length === 0 ? (
-                        <p>No products match these filters.</p>
-                    ) : (
-                        <ul>
-                            {catalogProducts.slice(0, 8).map((product) => (
-                                <li key={product.id}>
-                                    <span>{product.canonical_name}</span>
-                                    {product.min_price != null && <span>${product.min_price}</span>}
-                                    {product.source_url && (
-                                        <a href={product.source_url} target="_blank" rel="noreferrer">
-                                            View
-                                        </a>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </section>
             </aside>
         </>
     );
