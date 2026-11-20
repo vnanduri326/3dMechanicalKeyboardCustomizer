@@ -3,18 +3,26 @@
 
 import React from 'react';
 import {CustomizerSelection} from '../types';
+import {CATEGORIES} from '../categories';
+import {CloseIcon} from '../icons';
 
-export const CartPanel: React.FC<{selection: CustomizerSelection}> = ({selection}) =>{
-    const items = Object.values(selection).filter(Boolean);
-    const subtotal = items.reduce((sum, p) => sum + (p?.min_price ?? 0), 0);
+interface CartPanelProps{
+    selection: CustomizerSelection;
+    onRemove: (key: keyof CustomizerSelection) => void;
+}
+
+export const CartPanel: React.FC<CartPanelProps> = ({selection, onRemove}) =>{
+    const items = CATEGORIES.map((c) => ({key: c.selKey, product: selection[c.selKey] })).filter((i) => i.product);
+    const subtotal = items.reduce((sum, i) => sum + (i.product?.min_price ?? 0), 0);
     return (
         <>
             <div className="kc-cart-items">
-                {items.map((p) => p && (
-                    <div className="kc-cart-item" key={p.id}>
+                {items.map(({key, product: p}) => p && (
+                    <div className="kc-cart-item" key={key}>
                         <span className="kc-ph kc-ph-thumb" />
                         <span >{p.canonical_name}</span>
                         <span className="kc-price">${p.min_price}</span>
+                        <button className="kc-cart-remove" onClick={() => onRemove(key)} aria-label={`Remove ${p.canonical_name} from cart`}><CloseIcon /></button>
                     </div>
                 ))}
             </div>

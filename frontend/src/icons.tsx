@@ -22,8 +22,9 @@ export const ArrowIcon = ({dir}: {dir: 'left' | 'right'}) => (
 
     // info logo is built different from filled shapes so defined separately
 export const InfoIcon = () => (
-    <svg viewBox="0 0 24 24" aria-hidden>
-        <path fillRule="evenodd" d="M12 1.5a10.5 10.5 0 1 0 0 21 10.5 10.5 0 0 0 0-21zm0 2.2a8.3 8.3 0 1 1 0 16.6 8.3 8.3 0 0 1 0-16.6z" />
-        <circle cx="12" cy="7.6" r="1.4"/><rect x="10.9" y="10.5" width="2.2" height="6.8" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden>
+    <path fillRule="evenodd" d="M12 1.5a10.5 10.5 0 1 0 0 21 10.5 10.5 0 0 0 0-21zm0 2.2a8.3 8.3 0 1 1 0 16.6 8.3 8.3 0 0 1 0-16.6z" />
+    <circle cx="12" cy="7.6" r="1.4" />
+    <rect x="10.9" y="10.5" width="2.2" height="6.8" />
+  </svg>
 );

@@ -44,11 +44,22 @@ export default function App() {
     );
   };
 
-  const handleSelectProduct = (product: Product) => {
-    setSelection((prev) => ({
-      ...prev,
-      [product.type === 'keyboard' ? 'case' : product.type === 'pcb_plate' ? 'pcb' : product.type === 'keycaps' ? 'keycap' : product.type]: product,
-    }));
+  const toggleSelect = (selKey: keyof CustomizerSelection, product: Product) => {
+    setSelection((prev) => {
+      const next = { ...prev };
+      if (prev[selKey]?.id === product.id) delete next[selKey];
+      else next[selKey] = product;
+      return next;
+    });
+  };
+
+  // remove from cart
+  const removeFromCart = (selKey: keyof CustomizerSelection) => {
+    setSelection((prev) => {
+      const next = {...prev};
+      delete next[selKey];
+      return next;
+    });
   };
 
   // arrow buttons move the centered item in a row
@@ -87,14 +98,14 @@ export default function App() {
           onTagToggle={handleTagToggle}
         />
       }
-      cart={<CartPanel selection={selection} />}
+      cart={<CartPanel selection={selection} onRemove={removeFromCart}/>}
       />
       <main className="kc-mid">
-        {visible.map((c) => (
-          <CarouselRow key={c.key} category={c} products={productsByCat[c.key]} index={centered[c.key]} selectedId={selection[c.selKey]?.id} onStep={(dir) => step(c.key, dir)} onSelect={handleSelectProduct} />
-        ))}
+        {CATEGORIES.map((c) => visible.includes(c) ? (
+          <CarouselRow key={c.key} category={c} products={productsByCat[c.key]} index={centered[c.key]} selectedId={selection[c.selKey]?.id} onStep={(dir) => step(c.key, dir)} onSelect={(product) => toggleSelect(c.selKey, product)} />
+        ) : <div key={c.key} /> )}
         <button className="kc-theme-btn" onClick={toggleTheme}>Light/Dark</button>
-        {!infoOpen && (
+        {!infoOpen &&(
           <button className="kc-info-open" onClick={() => setInfoOpen(true)} aria-label="Open info"><InfoIcon /></button>
         )}
       </main>
