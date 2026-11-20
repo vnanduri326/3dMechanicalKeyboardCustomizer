@@ -1,6 +1,7 @@
 // shows filters or cart (groupd under option), leaving the other to be a button in LL corner
 import React from 'react';
 import {FilterIcon, CartIcon, CloseIcon} from '../icons.tsx';
+import { useResizablePanel } from '../hooks/useResizablePanel';
 
 export type LeftMode = 'filters' | 'cart';
 
@@ -15,6 +16,11 @@ interface LeftPanelProps {
 }
 
 export const LeftPanel: React.FC<LeftPanelProps> = ({mode, open, cartCount, onMode, onClose, filters, cart}) => {
+ const {width, dragging, min, max, handleProps} = useResizablePanel({
+    side: 'left',
+    initial: 270,
+    min: 210,
+ });
  const cartBtn = (
     <button className="kc-fab kc-fab-cart" onClick={() => onMode('cart')} aria-label="Open cart">
         <CartIcon /><span className="kc-badge">{cartCount}</span>
@@ -31,14 +37,27 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({mode, open, cartCount, onMo
 
  // default display to filters
  return (
-    <aside className={`kc-left kc-left-${mode}`}>
-        <div className="kc-panel-head">
-            {mode === 'filters' ? <FilterIcon halo /> : <CartIcon halo />}
-            <h2 className="kc-px">{mode === 'filters' ? 'Filters' : 'Your Cart'}</h2>
-            <button className="kc-x" onClick={onClose} aria-label="Close panel"><CloseIcon /></button>
-        </div>
-        {mode === 'filters' ? filters : cart}
-        <div className="kc-swap">{mode === 'filters' ? cartBtn : filterBtn}</div>
-    </aside>
+    <>
+        <aside className={`kc-left kc-left-${mode}`} style={{width}}>
+            <div className="kc-panel-head">
+                {mode === 'filters' ? <FilterIcon halo /> : <CartIcon halo />}
+                <h2 className="kc-px">{mode === 'filters' ? 'Filters' : 'Your Cart'}</h2>
+                <button className="kc-x" onClick={onClose} aria-label="Close panel"><CloseIcon /></button>
+            </div>
+            {mode === 'filters' ? filters : cart}
+            <div className="kc-swap">{mode === 'filters' ? cartBtn : filterBtn}</div>
+        </aside>
+        <div
+            className={`kc-resizer kc-resizer-left ${dragging ? 'kc-dragging' : ''}`}
+            role="separator"
+            aria-label={`Resize ${mode} panel`}
+            aria-orientation="vertical"
+            aria-valuenow={Math.round(width)}
+            aria-valuemin={min}
+            aria-valuemax={max}
+            tabIndex={0}
+            {...handleProps}
+        />
+    </>
  );
 };
