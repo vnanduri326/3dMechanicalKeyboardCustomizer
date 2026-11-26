@@ -7,7 +7,7 @@ import {
   Product,
   RecommendationPreferences,
 } from './types';
-import { fetchProducts, fetchRecommendations } from './services/api';
+import { fetchAllProducts, fetchRecommendations } from './services/api';
 import { productMatchesAnySubfilter } from './catalogSubfilters';
 import { PREFERENCE_CATEGORIES, PreferenceCategoryKey} from './categories.ts';
 import { FilterPanel } from './components/FilterPanel';
@@ -41,7 +41,7 @@ const initialCatalogFilters: CatalogFilters = {
 export default function App() {
   const [centered, setCentered] = useState<ByCategory<number>>(zeroes);
   const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
-  const [plateError, setPlateError] = useState('');
+  const [catalogError, setCatalogError] = useState('');
   const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(initialCatalogFilters);
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [leftMode, setLeftMode] = useState<LeftMode>('filters');
@@ -53,17 +53,20 @@ export default function App() {
   const [recommendationError, setRecommendationError] = useState('');
 
   useEffect(() => {
-    Promise.all([
-      fetchProducts('keycap', undefined, undefined, 100),
-      fetchProducts('switch', undefined, undefined, 100),
-      fetchProducts('pcb_plate', undefined, undefined, 100),
-      fetchProducts('case', undefined, undefined, 100),
-      fetchProducts('other', undefined, undefined, 100),
-    ])
-      .then((products) => setCatalogProducts(products.flat()))
+    let active = true;
+    fetchAllProducts()
+      .then((products) => {
+        if (active) setCatalogProducts(products);
+      })
       .catch((error: unknown) => {
-        setPlateError(error instanceof Error ? error.message : 'Failed to load catalog products');
+        if (active) {
+          setCatalogError(error instanceof Error ? error.message : 'Failed to load catalog products');
+        }
       });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -201,7 +204,7 @@ export default function App() {
             onChoose={(index) => setCentered((current) => ({ ...current, [category.key]: index }))}
           />
         ))}
-        {plateError && <p className="kc-recommend-error" role="alert">{plateError}</p>}
+        {catalogError && <p className="kc-recommend-error" role="alert">{catalogError}</p>}
         <button className="kc-theme-btn" onClick={toggleTheme}>Light/Dark</button>
         {!infoOpen && (
           <button className="kc-info-open" onClick={() => setInfoOpen(true)} aria-label="Open info"><InfoIcon /></button>

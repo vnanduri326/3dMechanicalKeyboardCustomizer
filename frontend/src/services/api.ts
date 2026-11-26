@@ -7,6 +7,35 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+interface ProductPage {
+  items: Product[];
+  total: number;
+}
+
+export async function fetchAllProducts(): Promise<Product[]> {
+  const products: Product[] = [];
+  const limit = 100;
+  let offset = 0;
+  let total = Number.POSITIVE_INFINITY;
+
+  while (offset < total) {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch products');
+    }
+
+    const page: ProductPage = await response.json();
+    products.push(...page.items);
+    total = page.total;
+    offset += page.items.length;
+
+    if (page.items.length === 0) break;
+  }
+
+  return products;
+}
+
 export async function fetchProducts(
   type?: string,
   tags?: string[],
