@@ -1,4 +1,4 @@
-![3D mechanical keyboard logo]([https://imgur.com/a/logo-7pNmAEz)
+![3D mechanical keyboard logo](https://i.imgur.com/9c0CUj3.png)
 # 3D Mechanical Keyboard Customizer ⌨️
 Looking to build your first mechanical keyboard? Look no longer! Customizer your own keyboard with 3D Mechanical Keyboard Customizer 
 
@@ -13,4 +13,3 @@ Looking to build your first mechanical keyboard? Look no longer! Customizer your
 
 ### Check it out:
 https://3d-mechanical-keyboard-customizer-7.vercel.app 
-
